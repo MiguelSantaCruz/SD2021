@@ -161,6 +161,7 @@ public class Menu implements Serializable{
                 this.handlers.get(op-1).execute();
              }
          } while (op != 0);
+        System.out.println("\033[H\033[2J");
      }
 
      /**
@@ -188,17 +189,17 @@ public class Menu implements Serializable{
      /** Apresentar o menu */
      private void show() {
          System.out.println("");
-         System.out.print("   ╔═");
+         System.out.print("┌─");
          for (int i = 0; i < this.titulo.length(); i++) {
-             System.out.print("═");
+             System.out.print("─");
          }
-         System.out.println("═╗   ");
-         System.out.println("═══╣ \u001B[36m"+this.titulo+"\u001B[0m ╠═══ ");
-         System.out.print("   ╚═");
+         System.out.println("─┐");
+         System.out.println("│ \u001B[36m"+this.titulo+"\u001B[0m │");
+         System.out.print("└─");
          for (int i = 0; i < this.titulo.length(); i++) {
-             System.out.print("═");
+             System.out.print("─");
          }
-         System.out.println("═╝   ");
+         System.out.println("─┘");
          for (int i=0; i<this.opcoes.size(); i++) {
              System.out.print("\u001B[36m");
              System.out.print(i+1);

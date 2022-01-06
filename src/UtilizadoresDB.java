@@ -33,7 +33,8 @@ public class UtilizadoresDB implements Serializable{
      */
     public Utilizador adicionarUtilizadorNormal(String nome,String password){
         String id = geraIdentificadorUnico();
-        Utilizador utilizador = new Utilizador(id, nome, String.valueOf(password.hashCode()),false);
+        Utilizador utilizador = new Utilizador(id, nome, password.hashCode(),false);
+        utilizador.toString();
         this.utilizadores.put(utilizador.getId(), utilizador);
         return utilizador;
     }
@@ -46,7 +47,7 @@ public class UtilizadoresDB implements Serializable{
      */
     public Utilizador adicionarAdministrador(String nome,String password){
         String id = geraIdentificadorUnico();
-        Utilizador administrador = new Utilizador(id, nome, String.valueOf(password.hashCode()),true);
+        Utilizador administrador = new Utilizador(id, nome, password.hashCode(),true);
         this.administradores.put(administrador.getId(), administrador);
         return administrador;
     }
@@ -141,6 +142,35 @@ public class UtilizadoresDB implements Serializable{
         boolean existemAdministradores = false;
         if(this.administradores.size() > 0) existemAdministradores = true;
         return existemAdministradores;
+    }
+
+
+    /**
+     * Verifica se uma determinada password de um utilizador normal corresponde á hash guardada
+     * @param password A password a verificar
+     * @return {@code true} se a password for válida, {@code false} caso contrário
+     */
+    public boolean autenticaUtilizador(String id, String password){
+        boolean validPassword = false;
+        if(this.utilizadorExiste(id)){
+            Utilizador utilizador = this.utilizadores.get(id);
+            if(utilizador.getPasswordHash() == password.hashCode()) validPassword = true;
+        }
+        return validPassword;
+    }
+
+    /**
+     * Verifica se uma determinada password  de um administrador corresponde á hash guardada
+     * @param password A password a verificar
+     * @return {@code true} se a password for válida, {@code false} caso contrário
+     */
+    public boolean autenticaAdministrador(String id, String password){
+        boolean validPassword = false;
+        if(this.administradorExiste(id)){
+            Utilizador administrador = this.administradores.get(id);
+            if(administrador.getPasswordHash() == password.hashCode()) validPassword = true;
+        }
+        return validPassword;
     }
 
     /**

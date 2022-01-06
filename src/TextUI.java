@@ -22,6 +22,8 @@ public class TextUI implements Serializable{
     * Construtor vazio de TextUI
     */
     public TextUI() {
+        Utilizador administrador = utilizadoresDB.adicionarAdministrador("Nuno", "12345");
+        System.out.println("Identificador do admin: " + administrador.getId());
     }
 
     /**
@@ -51,7 +53,9 @@ public class TextUI implements Serializable{
         menu.setPreCondition(3, ()-> this.voosDB.existemVoosRegistados());
 
         //Registar os handlers das transições
-        menu.setHandler(4,() -> {
+        menu.setHandler(1, () -> autenticaAdministrador());
+        menu.setHandler(2, () -> autenticaUtilizador());
+        menu.setHandler(4, () -> {
             try {
                 guardaBin(this);
             } catch (IOException e) {
@@ -76,6 +80,61 @@ public class TextUI implements Serializable{
     }
 
     /**
+     * Autentica administrador
+     */
+    public void autenticaAdministrador(){
+        System.out.println("Insira o seu identificador:");
+        System.out.print("> ");
+        String id = scin.nextLine();
+        System.out.println("Insira a sua password:");
+        System.out.print("> ");
+        String password = scin.nextLine();
+        if(utilizadoresDB.autenticaAdministrador(id, password)) {
+            clearScreen();
+            menuAdministrador();
+        }
+        else System.out.println("[Erro] Passoword ou utilizador inválido");
+    }
+
+    /**
+     * Autentica utilizador normal
+     */
+    public void autenticaUtilizador(){
+        System.out.println("Insira o seu identificador:");
+        System.out.print("> ");
+        String id = scin.nextLine();
+        System.out.println("Insira a sua password:");
+        System.out.print("> ");
+        String password = scin.nextLine();
+        if(utilizadoresDB.autenticaUtilizador(id, password)){
+            clearScreen();
+            menuUtilizador();
+        } else System.out.println("[Erro] Password ou utilizador inválido");
+    }
+
+    /**
+     * Menu do utilizador autenticado
+     */
+    public void menuUtilizador(){
+        Menu menu = new Menu(new String[]{
+            "####",
+        });
+        menu.setTitulo(" Utilizador - Área autenticada");
+        menu.run();
+    }
+
+    /**
+     * Menu do administrador autenticado
+     */
+    public void menuAdministrador(){
+        Menu menu = new Menu(new String[]{
+            "####",
+        });
+        menu.setTitulo("Administrador - Área autenticada");
+        menu.run();
+    }
+
+    /**
      * Método que permite guardar num ficheiro binário o estado do programa
      * @param atualState O estado atual do programa (instância de textUI)
      * @throws FileNotFoundException Ficheiro não encontrado
@@ -91,6 +150,7 @@ public class TextUI implements Serializable{
         oos.flush();
         oos.close();
         System.out.println("Guardado no ficheiro: " + filename);
+        TextUI.clearScreen();
     }
 
     /**
@@ -110,6 +170,13 @@ public class TextUI implements Serializable{
         System.out.println("\033[H\033[2J");
         System.out.println("Lido do ficheiro: " + filename);
         return m;
+    }
+
+    /**
+     * Limpa o ecrã
+     */
+    public static void clearScreen(){
+        System.out.println("\033[H\033[2J");
     }
 
 }

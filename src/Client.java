@@ -45,7 +45,7 @@ public class Client {
             socket.shutdownInput();
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Servidor indisponível");
         }
     }
 

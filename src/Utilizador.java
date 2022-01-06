@@ -9,7 +9,7 @@ public class Utilizador implements Serializable{
     /** Nome do utilizador */
     private String Name;
     /** Hash da password do utilizador */
-    private String passwordHash;
+    private int passwordHash;
     /** Booleano que diz se o utilizador é administrador */
     private boolean isAdmin;
 
@@ -20,7 +20,7 @@ public class Utilizador implements Serializable{
     public Utilizador() {
         this.id = "NaN";
         this.Name = "NaN";
-        this.passwordHash = "NaN";
+        this.passwordHash = 0;
         this.isAdmin = false;
     }
 
@@ -29,10 +29,10 @@ public class Utilizador implements Serializable{
      * Construtor parametrizado de Utilizador
      * @param id O identificador do utilizador
      * @param Name O nome do utilizador
-     * @param passwordHash A hash da apssord do utilizador
+     * @param passwordHash A hash da password do utilizador
      * @param isAdmin Booleano que indica se se trata de um utilizador normal ou de um administrador
      */
-    public Utilizador(String id, String Name, String passwordHash, boolean isAdmin) {
+    public Utilizador(String id, String Name, int passwordHash, boolean isAdmin) {
         this.id = id;
         this.Name = Name;
         this.passwordHash = passwordHash;
@@ -75,7 +75,7 @@ public class Utilizador implements Serializable{
      * Obter a hash da password
      * @return A hash da passowrd
      */
-    public String getPasswordHash() {
+    public int getPasswordHash() {
         return this.passwordHash;
     }
 
@@ -83,7 +83,7 @@ public class Utilizador implements Serializable{
      * Definir a hash da password
      * @param passwordHash A nova hash da password
      */
-    public void setPasswordHash(String passwordHash) {
+    public void setPasswordHash(int passwordHash) {
         this.passwordHash = passwordHash;
     }
 
@@ -102,19 +102,6 @@ public class Utilizador implements Serializable{
     public void setIsAdmin(boolean isAdmin) {
         this.isAdmin = isAdmin;
     }
-
-
-    /**
-     * Verifica se uma determinada password corresponde á hash guardada
-     * @param password A password a verificar
-     * @return {@code true} se a password for válida, {@code false} caso contrário
-     */
-    public boolean autenticaUtilizador(String password){
-        boolean validPassword = false;
-        if(this.passwordHash.equals(password.hashCode())) validPassword = true;
-        return validPassword;
-    }
-
 
     @Override
     public boolean equals(Object o) {
