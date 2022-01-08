@@ -1,6 +1,6 @@
 make:
 	javac $(shell find . -name "*.java") -d ./bin
 run:
-	java -cp ./bin mainTestUI
+	java -cp ./bin Client localhost
 doc:
 	javadoc $(shell find . -name "*.java") -d ./doc
