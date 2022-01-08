@@ -1,4 +1,5 @@
-package src;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,6 +77,20 @@ public class VoosDB implements Serializable{
         boolean existemVoos = false;
         if(this.voos.size() > 0) existemVoos = true;
         return existemVoos;
+    }
+
+    /**
+     * Devolve todos os voos disponíveis
+     * @throws IOException Erro de IO genérico
+     */
+    public void getAllVoos(DataOutputStream out) throws IOException{
+        /* Escrever o tamanho do map */
+        out.writeInt(this.voos.size());
+        System.out.println("Existem : " + this.voos.size() + " voos");
+        /* Enviar os voos um a um */
+        for (Map.Entry<String,Voo> entry : this.voos.entrySet()) {
+            entry.getValue().serialize(out);
+        }
     }
 
     /**

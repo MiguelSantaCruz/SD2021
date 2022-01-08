@@ -1,5 +1,3 @@
-package src;
-
 import java.io.Serializable;
 import java.util.*;
 
@@ -59,7 +57,7 @@ public class Menu implements Serializable{
          this.handlers = new ArrayList<Handler>();
          this.opcoes.forEach(s-> {
              this.disponivel.add(()->true);
-             this.handlers.add(()->System.out.println("\nATENÇÃO: Opção não implementada!"));
+             this.handlers.add(()->System.out.println("\nOpção não implementada!"));
          });
      }
 
@@ -153,11 +151,10 @@ public class Menu implements Serializable{
              op = readOption();
             //testar pré-condição
              if (op>0 && !this.disponivel.get(op-1).validate()) {
-                System.out.println("----------------------------------------------");
                 System.out.println("Opção indisponível! Tente novamente.");
              } else if (op>0) {
+                System.out.println("\033[H\033[2J");
                 //executar handler
-                System.out.println("----------------------------------------------");
                 this.handlers.get(op-1).execute();
              }
          } while (op != 0);
@@ -223,7 +220,7 @@ public class Menu implements Serializable{
              op = -1;
          }
          if (op<0 || op>this.opcoes.size()) {
-             System.out.println("Opção Inválida!!!");
+             System.out.println("Opção Inválida");
              op = -1;
          }
          return op;

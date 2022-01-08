@@ -1,5 +1,6 @@
-package src;
-
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -21,6 +22,12 @@ public class Voo implements Serializable {
      * Construtor vazio
      */
     public Voo() {
+        this.id = "NaN";
+        this.origem = "NaN";
+        this.destino = "NaN";
+        this.duracao = 0;
+        this.capacidade = 0;
+        this.modeloAviao = "NaN";
     }
 
     /**
@@ -137,6 +144,42 @@ public class Voo implements Serializable {
         this.modeloAviao = modeloAviao;
     }
 
+    /**
+     * Serializa um objeto do tipo voo
+     * @param out DataOutputStream para onde será escrito o objeto serializado
+     * @throws IOException Erro de IO genérico
+     */
+    public void serialize(DataOutputStream out) throws IOException{
+        out.writeUTF(this.id);
+        out.writeUTF(this.origem);
+        out.writeUTF(this.destino);
+        out.writeFloat(this.duracao);
+        out.writeInt(this.capacidade);
+        out.writeUTF(this.modeloAviao);
+    }
+
+    /**
+     * Deserializa um objeto do tipo voo
+     * @param in DataInputStream de onde será lido o objeto deserializado
+     * @return O voo lido
+     * @throws IOException Erro de IO genérico
+     */
+    public Voo deserialize(DataInputStream in) throws IOException{
+        String id = in.readUTF();
+        String origem = in.readUTF();
+        String destino = in.readUTF();
+        float duracao = in.readFloat();
+        int capacidade = in.readInt();
+        String modeloAviao = in.readUTF();
+        Voo voo = new Voo(id,origem,destino,duracao,capacidade,modeloAviao);
+        return voo;
+    }
+
+    @Override
+    public Voo clone(){
+        Voo clonedVoo = new Voo(id, origem, destino, duracao, capacidade, modeloAviao);
+        return clonedVoo;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -156,13 +199,12 @@ public class Voo implements Serializable {
 
     @Override
     public String toString() {
-        return "{" +
-            " id='" + getId() + "'" +
-            ", origem='" + getOrigem() + "'" +
-            ", destino='" + getDestino() + "'" +
-            ", duracao='" + getDuracao() + "'" +
-            ", capacidade='" + getCapacidade() + "'" +
-            "}";
+        return " - Identificador do voo: " + getId() + "\n" +
+               " - Origem: " + getOrigem() + "\n" +
+               " - Destino: " + getDestino() + "\n" +
+               " - Duracao: " + getDuracao() + "\n" +
+               " - Capacidade: " + getCapacidade() + "\n" +
+               "─────────────────────────────────────────";
     }
 
 }

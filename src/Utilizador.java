@@ -1,5 +1,6 @@
-package src;
-
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -7,7 +8,7 @@ public class Utilizador implements Serializable{
     /** Identificador de utilizador */
     private String id;
     /** Nome do utilizador */
-    private String Name;
+    private String name;
     /** Hash da password do utilizador */
     private int passwordHash;
     /** Booleano que diz se o utilizador é administrador */
@@ -19,7 +20,7 @@ public class Utilizador implements Serializable{
      */
     public Utilizador() {
         this.id = "NaN";
-        this.Name = "NaN";
+        this.name = "NaN";
         this.passwordHash = 0;
         this.isAdmin = false;
     }
@@ -32,9 +33,9 @@ public class Utilizador implements Serializable{
      * @param passwordHash A hash da password do utilizador
      * @param isAdmin Booleano que indica se se trata de um utilizador normal ou de um administrador
      */
-    public Utilizador(String id, String Name, int passwordHash, boolean isAdmin) {
+    public Utilizador(String id, String name, int passwordHash, boolean isAdmin) {
         this.id = id;
-        this.Name = Name;
+        this.name = name;
         this.passwordHash = passwordHash;
         this.isAdmin = isAdmin;
     }
@@ -60,15 +61,15 @@ public class Utilizador implements Serializable{
      * @return O nome do utilizador
      */
     public String getName() {
-        return this.Name;
+        return this.name;
     }
 
     /**
      * Definir o nome do utilizador
      * @param Name O novo nome do utilizador
      */
-    public void setName(String Name) {
-        this.Name = Name;
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -103,6 +104,33 @@ public class Utilizador implements Serializable{
         this.isAdmin = isAdmin;
     }
 
+    /**
+     * Serializa um objeto do tipo Utilizador
+     * @param out DataOutputStream para onde será escrito o objeto serializado
+     * @throws IOException Erro de IO genérico
+     */
+    public void serialize(DataOutputStream out) throws IOException{
+        out.writeUTF(this.id);
+        out.writeUTF(this.name);
+        out.writeInt(this.passwordHash);
+        out.writeBoolean(this.isAdmin);
+    }
+
+     /**
+     * Deserializa um objeto do tipo Utilizador
+     * @param in DataInputStream de onde será lido o objeto deserializado
+     * @return O utilizador lido
+     * @throws IOException Erro de IO genérico
+     */
+    public Utilizador deserialize(DataInputStream in) throws IOException{
+        String id = in.readUTF();
+        String name = in.readUTF();
+        int passwordHash = in.readInt();
+        boolean isAdmin = in.readBoolean();
+        Utilizador utilizador = new Utilizador(id,name,passwordHash,isAdmin);
+        return utilizador;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this)
@@ -111,12 +139,12 @@ public class Utilizador implements Serializable{
             return false;
         }
         Utilizador utilizador = (Utilizador) o;
-        return Objects.equals(id, utilizador.id) && Objects.equals(Name, utilizador.Name) && Objects.equals(passwordHash, utilizador.passwordHash);
+        return Objects.equals(id, utilizador.id) && Objects.equals(name, utilizador.name) && Objects.equals(passwordHash, utilizador.passwordHash);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, Name, passwordHash);
+        return Objects.hash(id, name, passwordHash);
     }
 
     @Override
