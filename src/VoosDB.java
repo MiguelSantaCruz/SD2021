@@ -86,7 +86,7 @@ public class VoosDB implements Serializable{
     public void getAllVoos(DataOutputStream out) throws IOException{
         /* Escrever o tamanho do map */
         out.writeInt(this.voos.size());
-        System.out.println("Existem : " + this.voos.size() + " voos");
+        System.out.println("[Voos DataBase] Existem: " + this.voos.size() + " voos");
         /* Enviar os voos um a um */
         for (Map.Entry<String,Voo> entry : this.voos.entrySet()) {
             entry.getValue().serialize(out);
