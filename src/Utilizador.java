@@ -2,6 +2,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class Utilizador implements Serializable{
@@ -13,6 +15,8 @@ public class Utilizador implements Serializable{
     private int passwordHash;
     /** Booleano que diz se o utilizador é administrador */
     private boolean isAdmin;
+    /** Lista de identificadores de reservas efetuadas */
+    private Map<String,String> reservas;
 
 
     /**
@@ -23,6 +27,7 @@ public class Utilizador implements Serializable{
         this.name = "NaN";
         this.passwordHash = 0;
         this.isAdmin = false;
+        this.reservas = new HashMap<>();
     }
 
 
@@ -38,6 +43,7 @@ public class Utilizador implements Serializable{
         this.name = name;
         this.passwordHash = passwordHash;
         this.isAdmin = isAdmin;
+        this.reservas = new HashMap<>();
     }
 
     /**
@@ -74,7 +80,7 @@ public class Utilizador implements Serializable{
 
     /**
      * Obter a hash da password
-     * @return A hash da passowrd
+     * @return A hash da password
      */
     public int getPasswordHash() {
         return this.passwordHash;
@@ -105,6 +111,41 @@ public class Utilizador implements Serializable{
     }
 
     /**
+     * Obter uma lista de todas as reservas
+     * @return A string com todas as reservas
+     */
+    public String getlistBookings(ReservasDB reservasDB) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String,String> entry : this.reservas.entrySet()) {
+            if(reservasDB.reservaExiste(entry.getValue())){
+                Reserva reserva = reservasDB.getReservaByID(entry.getValue());
+                sb.append(reserva.toString());
+                sb.append("\n");
+            } else {
+                sb.append(" -- Reserva com ID: " + entry.getValue() + " Cancelada --\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Adiciona um identificador de reserva a este utilizador
+     * @param idReserva O identificador da reserva a adicionar
+     */
+    public void adicionaReserva(String idReserva){
+        this.reservas.put(idReserva, idReserva);
+    }
+
+
+    /**
+     * Remove uma reserva a este utilizador
+     * @param idReserva O identificador da reserva a remover
+     */
+    public void removeReserva(String idReserva){
+        this.reservas.remove(idReserva);
+    }
+
+    /**
      * Serializa um objeto do tipo Utilizador
      * @param out DataOutputStream para onde será escrito o objeto serializado
      * @throws IOException Erro de IO genérico
@@ -114,6 +155,10 @@ public class Utilizador implements Serializable{
         out.writeUTF(this.name);
         out.writeInt(this.passwordHash);
         out.writeBoolean(this.isAdmin);
+        out.writeInt(this.reservas.size());
+        for (Map.Entry<String,String> entry : this.reservas.entrySet()) {
+           out.writeUTF(entry.getValue());
+        }
     }
 
      /**
@@ -122,12 +167,17 @@ public class Utilizador implements Serializable{
      * @return O utilizador lido
      * @throws IOException Erro de IO genérico
      */
-    public Utilizador deserialize(DataInputStream in) throws IOException{
+    public static Utilizador deserialize(DataInputStream in) throws IOException{
         String id = in.readUTF();
         String name = in.readUTF();
         int passwordHash = in.readInt();
         boolean isAdmin = in.readBoolean();
         Utilizador utilizador = new Utilizador(id,name,passwordHash,isAdmin);
+        int numeroReservas = in.readInt();
+        for (int i = 0; i < numeroReservas; i++) {
+            String idReserva = in.readUTF();
+            utilizador.reservas.put(idReserva,idReserva);
+        }
         return utilizador;
     }
 

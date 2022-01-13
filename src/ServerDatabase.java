@@ -3,10 +3,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDateTime;
 
 public class ServerDatabase {
     private UtilizadoresDB utilizadoresDataBase;
     private VoosDB voosDataBase;
+    private ReservasDB reservasDataBase;
 
     /**
      * Construtor vazio de ServerDatabase
@@ -14,6 +16,7 @@ public class ServerDatabase {
     public ServerDatabase(){
         this.utilizadoresDataBase = new UtilizadoresDB();
         this.voosDataBase = new VoosDB();
+        this.reservasDataBase = new ReservasDB();
     }
 
 
@@ -49,6 +52,24 @@ public class ServerDatabase {
         this.voosDataBase = voosDataBase;
     }
 
+
+    /**
+     * Obter a base de dados de reservas
+     * @return A base de dados de reservas
+     */
+    public ReservasDB getReservasDataBase() {
+        return this.reservasDataBase;
+    }
+
+    /**
+     * Definir a base de dados de reservas
+     * @param reservasDataBase A nova base de dados de reservas
+     */
+    public void setReservasDataBase(ReservasDB reservasDataBase) {
+        this.reservasDataBase = reservasDataBase;
+    }
+
+
     /**
      * Método que permite guardar num ficheiro binário o estado do programa
      * @param filename O nome do ficheiro a ser guardado
@@ -59,6 +80,7 @@ public class ServerDatabase {
         ObjectOutputStream oos = new ObjectOutputStream(bf);
         oos.writeObject(this.utilizadoresDataBase);
         oos.writeObject(this.voosDataBase);
+        oos.writeObject(this.reservasDataBase);
         oos.flush();
         oos.close();
     }
@@ -74,6 +96,7 @@ public class ServerDatabase {
         ObjectInputStream ois = new ObjectInputStream(bf);
         this.utilizadoresDataBase = (UtilizadoresDB) ois.readObject();
         this.voosDataBase = (VoosDB) ois.readObject();
+        this.reservasDataBase = (ReservasDB) ois.readObject();
         ois.close();
     }
 

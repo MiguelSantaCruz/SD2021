@@ -20,14 +20,12 @@ public class VoosDB implements Serializable{
      * Adicionar um voo à base de dados
      * @param origem A origem do voo
      * @param destino O destino do voo
-     * @param duracao A duração do voo em horas
      * @param capacidade A capacidade em termo do número de pessoas do avião
-     * @param modeloAviao O modelo do avião
      * @return O voo adicionado
      */
-    public Voo adicionaVoo(String origem, String destino, float duracao, int capacidade,String modeloAviao){
+    public Voo adicionaVoo(String origem, String destino, int capacidade){
         String id = geraIdentificadorUnico();
-        Voo voo = new Voo(id, origem, destino, duracao, capacidade,modeloAviao);
+        Voo voo = new Voo(id, origem, destino, capacidade);
         this.voos.put(voo.getId(), voo);
         return voo;
     }

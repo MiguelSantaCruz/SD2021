@@ -179,7 +179,7 @@ public class UtilizadoresDB implements Serializable{
 		//Gerar um identificador aleatório
 		String id;
 		do {
-			id = UUID.randomUUID().toString().substring(0, 8);
+			id = UUID.randomUUID().toString().substring(0, 4);
 		} while (this.utilizadores.containsKey(id));
 		return id;
 	}

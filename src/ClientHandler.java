@@ -50,6 +50,8 @@ public class ClientHandler implements Runnable{
                 String function = stringTokenizer.nextToken();
                 switch (function) {
                     case "login":
+                        /** login;user/admin;id;password */
+                        /** Autenticar utilizador ou administrador */
                         String userType = stringTokenizer.nextToken();
                         String id = stringTokenizer.nextToken();
                         String password = stringTokenizer.nextToken();
@@ -57,14 +59,110 @@ public class ClientHandler implements Runnable{
                         if(userType.equals("admin") && serverDatabase.getUtilizadoresDataBase().autenticaAdministrador(id, password)) validLogin = true;
                         if(userType.equals("user") && serverDatabase.getUtilizadoresDataBase().autenticaUtilizador(id, password)) validLogin = true;
                         out.writeBoolean(validLogin);
+                        /** Enviar o utilizador caso a autenticação tenha sido bem sucedida */
+                        if(validLogin){
+                            Utilizador utilizador = new Utilizador();
+                            if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(id)) utilizador = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(id);
+                            if(serverDatabase.getUtilizadoresDataBase().administradorExiste(id)) utilizador = serverDatabase.getUtilizadoresDataBase().getAdministradorByID(id);
+                            utilizador.serialize(out);
+                        }
                         break;
                     case "list":
+                        /** list;flights; */
+                        /** list;bookings;idUser */
                         String type = stringTokenizer.nextToken();
-                        if(type.equals("flights")){
-                            serverDatabase.getVoosDataBase().getAllVoos(out);
+                        switch (type) {
+                            case "flights":
+                                /** Lista todos os voos existentes */
+                                serverDatabase.getVoosDataBase().getAllVoos(out);
+                                break;
+                            case "bookings":
+                                /** Listar todas as reservas de um utilizador */
+                                String userId = stringTokenizer.nextToken();
+                                System.out.println("User ID booking: " + userId);
+                                if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(userId)){
+                                    Utilizador user = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(userId);
+                                    String list = user.getlistBookings(serverDatabase.getReservasDataBase());
+                                    out.writeUTF(list);
+                                } else out.writeUTF("");
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case "register":
+                        /** register;user/admin;name;password; */
+                        String userTypeResgister = stringTokenizer.nextToken();
+                        String userName = stringTokenizer.nextToken();
+                        String userPassword = stringTokenizer.nextToken();
+                        Utilizador utilizadorAdicionado = new Utilizador();
+                        if (userTypeResgister.equals("admin")) {
+                            utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador(userName, userPassword);
+                        } else {
+                            utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarUtilizadorNormal(userName, userPassword);
+                        }
+                        utilizadorAdicionado.serialize(out);
+                        break;
+                    case "booking":
+                        /** booking;flightID;ClientID */
+                        String flightID = stringTokenizer.nextToken();
+                        String clientID = stringTokenizer.nextToken();
+                        Boolean bookingRegistered = false;
+                        Reserva reserva = new Reserva();
+                        /** Verificar que voo e utilizador existem */
+                        if(serverDatabase.getVoosDataBase().vooExiste(flightID)){
+                            if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(clientID)){
+                                /** Adicionar reserva à base de dados */
+                                reserva = serverDatabase.getReservasDataBase().adicionaReserva(clientID, flightID);
+                                /** Adicionar identificador de reserva ao utilizador */
+                                serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(clientID).adicionaReserva(reserva.getIdReserva());
+                                bookingRegistered = true;
+                            }
+                        }
+                        out.writeBoolean(bookingRegistered);
+                        if(bookingRegistered) out.writeUTF(reserva.getIdReserva());
+                        break;
+                    case "add":
+                        /** add;flight;origem;destino;capacidade */
+                        String objectToAdd = stringTokenizer.nextToken();
+                        switch (objectToAdd) {
+                            case "flight":
+                                String origem = stringTokenizer.nextToken();
+                                String destino = stringTokenizer.nextToken();
+                                int capacidade = Integer.valueOf(stringTokenizer.nextToken());
+                                Voo voo = serverDatabase.getVoosDataBase().adicionaVoo(origem, destino, capacidade);
+                                voo.serialize(out);
+                                break;
+                        
+                            default:
+                                break;
+                        }
+                        break;
+                    case "delete":
+                        /** delete;booking;idReserva; */
+                        String objectType = stringTokenizer.nextToken();
+                        switch (objectType) {
+                            case "booking":
+                                String idReserva = stringTokenizer.nextToken();
+                                Boolean reservaExistia = false;
+                                if(serverDatabase.getReservasDataBase().reservaExiste(idReserva)){
+                                    Reserva reservaRemover = serverDatabase.getReservasDataBase().getReservaByID(idReserva);
+                                    if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(reservaRemover.getIdCliente())){
+                                        Utilizador utilizador = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(reservaRemover.getIdCliente());
+                                        utilizador.removeReserva(idReserva);
+                                    }
+                                    serverDatabase.getReservasDataBase().removerReserva(idReserva);
+                                    reservaExistia = true;
+                                }
+                                out.writeBoolean(reservaExistia);
+                                break;
+                        
+                            default:
+                                break;
                         }
                         break;
                     case "save":
+                        /** save;filename; */
                         String saveFilename = stringTokenizer.nextToken();
                         try {
                             serverDatabase.saveBin(saveFilename);
@@ -74,6 +172,7 @@ public class ClientHandler implements Runnable{
                         }
                         break;
                     case "read":
+                        /** read;filename; */
                         String readFilename = stringTokenizer.nextToken();
                         try {
                             serverDatabase.readBin(readFilename);

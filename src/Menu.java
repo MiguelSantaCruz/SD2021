@@ -220,6 +220,7 @@ public class Menu implements Serializable{
              op = -1;
          }
          if (op<0 || op>this.opcoes.size()) {
+             System.out.println("\033[H\033[2J");
              System.out.println("Opção Inválida");
              op = -1;
          }
