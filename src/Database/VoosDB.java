@@ -5,18 +5,24 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 import Business.Voo;
 
 public class VoosDB implements Serializable{
     /** Map que contém todos os voos */
     private Map<String,Voo> voos;
+    /** 
+     * Lock da base de dados de voos
+     */
+    public ReentrantLock lock;
 
     /**
      * Construtor vazio de GestVoos
      */
     public VoosDB(){
         this.voos = new HashMap<>();
+        this.lock = new ReentrantLock();
     }
 
     /**

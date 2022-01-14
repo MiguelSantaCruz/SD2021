@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 import Business.Reserva;
 
@@ -14,12 +15,19 @@ public class ReservasDB implements Serializable {
     * Map que contém as reservas registadas no sistema
     */
     private Map<String,Reserva> reservas;
+    /** 
+     * Lock da base de dados de reservas
+     */
+    public ReentrantLock lock;
+    
 
     /**
     * Construtor vazio de reservas
     */
     public ReservasDB() {
         this.reservas = new HashMap<>();
+        this.lock = new ReentrantLock();
+
     }
 
 

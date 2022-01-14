@@ -259,8 +259,8 @@ public class TextUI implements Serializable{
         menu.setHandler(2, () -> adicionarVoo());
         menu.setHandler(3, () -> fecharDia());
         menu.setHandler(4, () -> alterarPassword(administrador));
-        menu.setHandler(4, () -> guardaEstado());
-        menu.setHandler(5, () -> lerEstado());
+        menu.setHandler(5, () -> guardaEstado());
+        menu.setHandler(6, () -> lerEstado());
         menu.run();
     }
 

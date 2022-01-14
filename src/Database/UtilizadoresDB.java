@@ -2,6 +2,7 @@ package Database;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import Business.Utilizador;
 
@@ -10,7 +11,10 @@ public class UtilizadoresDB implements Serializable{
      * Map que contém os utilizadores registados no sistema
      */
     private Map<String,Utilizador> utilizadores;
-
+    /** 
+     * Lock da base de dados de utilizadores
+     */
+    public ReentrantLock lock;
     /**
      * Map que contém os administradores registados no sistema
      */
@@ -23,6 +27,7 @@ public class UtilizadoresDB implements Serializable{
     public UtilizadoresDB() {
         this.utilizadores = new HashMap<>();
         this.administradores = new HashMap<>();
+        this.lock = new ReentrantLock();
     }
 
     /**
