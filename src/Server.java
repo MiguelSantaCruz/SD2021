@@ -21,7 +21,7 @@ public class Server {
         serverDatabase.getVoosDataBase().adicionaVoo("Cape Town [SA]", "Beijing [CN]",267);
         serverDatabase.getVoosDataBase().adicionaVoo("Lisbon [PT]", "Paris [FR]", 234);
         
-        Utilizador admin = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador("admin1","Administrador 1", "12345");
+        Utilizador admin = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador("admin","Administrador 1", "12345");
         try (ServerSocket serverSocket = new ServerSocket(Server.port)) {
             System.out.println("[System info] ID do administrador: " + admin.getId());
             System.out.println("[System info] Password: 12345");

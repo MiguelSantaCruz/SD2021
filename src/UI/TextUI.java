@@ -249,7 +249,7 @@ public class TextUI implements Serializable{
         Menu menu = new Menu(new String[]{
             "Adicionar administrador",
             "Adicionar Voo",
-            "Fechar Dia - Semi funciona",
+            "Fechar Dia",
             "Alterar password",
             "Guardar estado",
             "Ler estado",
