@@ -1,9 +1,12 @@
+package Database;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import Business.Voo;
 
 public class VoosDB implements Serializable{
     /** Map que contém todos os voos */

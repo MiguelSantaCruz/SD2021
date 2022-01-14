@@ -1,3 +1,4 @@
+package Database;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
@@ -5,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import Business.Reserva;
 
 public class ReservasDB implements Serializable {
     /**
@@ -96,8 +99,8 @@ public class ReservasDB implements Serializable {
 
     /**
      * Remove todas as reservas de um determinado dia da base de dados
-     * @param date
-     * @param utilizadoresDB
+     * @param date A data que contem o dia em que serão removidas as reservas
+     * @param utilizadoresDB A base de dados de utilizadores
      */
     public void removerReservasNumDia(LocalDateTime date, UtilizadoresDB utilizadoresDB){
         for (Map.Entry<String,Reserva> entry : this.reservas.entrySet()) {

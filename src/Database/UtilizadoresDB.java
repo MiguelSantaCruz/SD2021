@@ -1,7 +1,9 @@
+package Database;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+
+import Business.Utilizador;
 
 public class UtilizadoresDB implements Serializable{
     /**
@@ -29,9 +31,8 @@ public class UtilizadoresDB implements Serializable{
      * @param password A password do utilizador
      * @return O utilizador adicionado
      */
-    public Utilizador adicionarUtilizadorNormal(String nome,String password){
-        String id = geraIdentificadorUnico();
-        Utilizador utilizador = new Utilizador(id, nome, password.hashCode(),false);
+    public Utilizador adicionarUtilizadorNormal(String username, String nome,String password){
+        Utilizador utilizador = new Utilizador(username, nome, password.hashCode(),false);
         utilizador.toString();
         this.utilizadores.put(utilizador.getId(), utilizador);
         return utilizador;
@@ -39,13 +40,13 @@ public class UtilizadoresDB implements Serializable{
 
     /**
      * Adicionar um administrador á base de dados
+     * @param username O username do utilizador
      * @param nome O nome do administrador
      * @param password A password do administrador
      * @return O administrador adicionado
      */
-    public Utilizador adicionarAdministrador(String nome,String password){
-        String id = geraIdentificadorUnico();
-        Utilizador administrador = new Utilizador(id, nome, password.hashCode(),true);
+    public Utilizador adicionarAdministrador(String username, String nome,String password){
+        Utilizador administrador = new Utilizador(username, nome, password.hashCode(),true);
         this.administradores.put(administrador.getId(), administrador);
         return administrador;
     }
@@ -170,19 +171,4 @@ public class UtilizadoresDB implements Serializable{
         }
         return validPassword;
     }
-
-    /**
-	 * Gera um identificador de 8 caracteres único
-	 * @return id gerado
-	 */
-	private String geraIdentificadorUnico(){
-		//Gerar um identificador aleatório
-		String id;
-		do {
-			id = UUID.randomUUID().toString().substring(0, 4);
-		} while (this.utilizadores.containsKey(id));
-		return id;
-	}
-    
-    
 }

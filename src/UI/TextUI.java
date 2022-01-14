@@ -1,10 +1,13 @@
+package UI;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.InputMismatchException;
 import java.util.Scanner;
+
+import Business.Utilizador;
+import Business.Voo;
 
 public class TextUI implements Serializable{
 
@@ -50,28 +53,42 @@ public class TextUI implements Serializable{
         menu.run();
     }
 
+    /**
+     * Efetuar o registo de um novo utilizador
+     */
     public void registarUtilizador(){
         System.out.println("Insira o seu nome:");
         System.out.print("> ");
-        String id = scin.nextLine();
-        String password;
-        String passwordCheck;
-        do {
-            System.out.println("Insira a sua password:");
-            System.out.print("> ");
-            password = scin.nextLine();
-            System.out.println("Confirme a sua password:");
-            System.out.print("> ");
-            passwordCheck = scin.nextLine();
-            if(!password.equals(passwordCheck)){
-                showErrorMessage("As duas password não coincidem");
-            }
-        } while (!password.equals(passwordCheck));
-        String registerUserRequest = "register;user;" + id + ";" + password + ";";
+        String name = scin.nextLine();
+        System.out.println("Insira um nome de utilizador:");
+        System.out.print("> ");
+        String username = scin.nextLine();
+        String registerUserRequest = "register;user;" + username + ";" + name+ ";";
         try {
             out.writeUTF(registerUserRequest);
+            while (in.readBoolean() == false) {
+                showErrorMessage("Nome de utilizador já existente");
+                System.out.println("Insira um nome de utilizador:");
+                System.out.print("> ");
+                username = scin.nextLine();
+                out.writeUTF(username);
+            }
+            String password;
+            String passwordCheck;
+            do {
+                System.out.println("Insira a sua password:");
+                System.out.print("> ");
+                password = scin.nextLine();
+                System.out.println("Confirme a sua password:");
+                System.out.print("> ");
+                passwordCheck = scin.nextLine();
+                if(!password.equals(passwordCheck)){
+                    showErrorMessage("As duas password não coincidem");
+                }
+            } while (!password.equals(passwordCheck));
+            out.writeUTF(password);
             Utilizador utilizadorAdicionado = Utilizador.deserialize(in);
-            System.out.println("ID do utilizador: " + utilizadorAdicionado.getId());
+            System.out.println("Adicionado com sucesso: " + utilizadorAdicionado.getId());
         } catch (IOException e) {
             showErrorMessage("Não foi possível efetuar ligação com o servidor");
         }
@@ -153,16 +170,18 @@ public class TextUI implements Serializable{
      */
     public void menuUtilizador(Utilizador utilizador){
         Menu menu = new Menu(new String[]{
+            "Alterar password",
             "Efetuar reserva",
             "Ver reservas efetuadas",
             "Cancelar reserva",
             "Ver voos disponíveis",
         });
         menu.setTitulo( utilizador.getName() + " - Área autenticada");
-        menu.setHandler(1, () -> efetuarReserva(utilizador));
-        menu.setHandler(2, () -> verReservas(utilizador));
-        menu.setHandler(3, () -> cancelarReserva());
-        menu.setHandler(4, () -> verVoos());
+        menu.setHandler(1, () -> alterarPassword(utilizador));
+        menu.setHandler(2, () -> efetuarReserva(utilizador));
+        menu.setHandler(3, () -> verReservas(utilizador));
+        menu.setHandler(4, () -> cancelarReserva(utilizador));
+        menu.setHandler(5, () -> verVoos());
         menu.run();
     }
 
@@ -207,11 +226,11 @@ public class TextUI implements Serializable{
     /**
      * Cancelar uma reserva
      */
-    public void cancelarReserva(){
+    public void cancelarReserva(Utilizador utilizador){
         System.out.println("Insira o identificador da reserva que pretende cancelar:");
         System.out.print("> ");
         String idReserva = scin.nextLine();
-        String requestBookingDeletion = "delete;booking;" + idReserva +";";
+        String requestBookingDeletion = "delete;booking;" + idReserva +";" + utilizador.getId() + ";";
         try {
             out.writeUTF(requestBookingDeletion);
             Boolean reservaExistia = in.readBoolean();
@@ -228,17 +247,62 @@ public class TextUI implements Serializable{
      */
     public void menuAdministrador(Utilizador administrador){
         Menu menu = new Menu(new String[]{
+            "Adicionar administrador",
             "Adicionar Voo",
             "Fechar Dia - Semi funciona",
+            "Alterar password",
             "Guardar estado",
             "Ler estado",
         });
         menu.setTitulo("[ADMIN] " + administrador.getName() + " - Área autenticada");
-        menu.setHandler(1, () -> adicionarVoo());
-        menu.setHandler(2, () -> fecharDia());
-        menu.setHandler(3, () -> guardaEstado());
-        menu.setHandler(4, () -> lerEstado());
+        menu.setHandler(1, () -> registarAdministrador());
+        menu.setHandler(2, () -> adicionarVoo());
+        menu.setHandler(3, () -> fecharDia());
+        menu.setHandler(4, () -> alterarPassword(administrador));
+        menu.setHandler(4, () -> guardaEstado());
+        menu.setHandler(5, () -> lerEstado());
         menu.run();
+    }
+
+    /**
+     * Efetuar o registo de um novo administrador
+     */
+    public void registarAdministrador(){
+        System.out.println("Insira o seu nome:");
+        System.out.print("> ");
+        String name = scin.nextLine();
+        System.out.println("Insira um nome de utilizador:");
+        System.out.print("> ");
+        String username = scin.nextLine();
+        String registerUserRequest = "register;admin;" + username + ";" + name+ ";";
+        try {
+            out.writeUTF(registerUserRequest);
+            while (in.readBoolean() == false) {
+                showErrorMessage("Nome de utilizador já existente");
+                System.out.println("Insira um nome de utilizador:");
+                System.out.print("> ");
+                username = scin.nextLine();
+                out.writeUTF(username);
+            }
+            String password;
+            String passwordCheck;
+            do {
+                System.out.println("Insira a sua password:");
+                System.out.print("> ");
+                password = scin.nextLine();
+                System.out.println("Confirme a sua password:");
+                System.out.print("> ");
+                passwordCheck = scin.nextLine();
+                if(!password.equals(passwordCheck)){
+                    showErrorMessage("As duas password não coincidem");
+                }
+            } while (!password.equals(passwordCheck));
+            out.writeUTF(password);
+            Utilizador utilizadorAdicionado = Utilizador.deserialize(in);
+            System.out.println("Adicionado com sucesso: " + utilizadorAdicionado.getId());
+        } catch (IOException e) {
+            showErrorMessage("Não foi possível efetuar ligação com o servidor");
+        }
     }
 
     /**
@@ -290,12 +354,40 @@ public class TextUI implements Serializable{
             String endDayRequest = "endDay;";
             try {
                 out.writeUTF(endDayRequest);
+                System.out.println(" -- Dia fechado --");
+                System.out.println("Reservas canceladas e impedido marcações de novas viagens");
             } catch (IOException e) {
                 showErrorMessage("Não foi possível efetuar ligação com o servidor");
             }
         }
-            
+    }
 
+    /**
+     * Alterar a password de um utilizador
+     * @param utilizador O utilizador que terá a password altualizada
+     */
+    public void alterarPassword(Utilizador utilizador){
+        String password,passwordCheck = "";
+        do {
+            System.out.println("Insira a nova password:");
+            System.out.print("> ");
+            password = scin.nextLine();
+            System.out.println("Confirme a sua password:");
+            System.out.print("> ");
+            passwordCheck = scin.nextLine();
+            if(!password.equals(passwordCheck)){
+                showErrorMessage("As duas password não coincidem");
+            }
+        } while (!password.equals(passwordCheck));
+        String changePasswordRequest;
+        if(utilizador.getIsAdmin() == true) changePasswordRequest = "passwordChange;admin;" + utilizador.getId() + ";" + password + ";";
+        else changePasswordRequest = "passwordChange;user;" + utilizador.getId() + ";" + password + ";";
+        try {
+            out.writeUTF(changePasswordRequest);
+            System.out.println("Password alterada com sucesso");
+        } catch (IOException e) {
+            showErrorMessage("Não foi possível efetuar ligação com o servidor");
+        }
     }
 
     /**

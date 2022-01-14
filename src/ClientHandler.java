@@ -3,11 +3,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.util.StringTokenizer;
+
+import Business.Reserva;
+import Business.Utilizador;
+import Business.Voo;
+import Database.ServerDatabase;
 
 public class ClientHandler implements Runnable{
 
@@ -91,16 +94,27 @@ public class ClientHandler implements Runnable{
                         }
                         break;
                     case "register":
-                        /** register;user/admin;name;password; */
+                        /** register;user/admin;username;name; */
                         String userTypeResgister = stringTokenizer.nextToken();
-                        String userName = stringTokenizer.nextToken();
-                        String userPassword = stringTokenizer.nextToken();
+                        String username = stringTokenizer.nextToken();
+                        String name = stringTokenizer.nextToken();
                         Utilizador utilizadorAdicionado = new Utilizador();
                         if (userTypeResgister.equals("admin")) {
-                            utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador(userName, userPassword);
+                            while (serverDatabase.getUtilizadoresDataBase().administradorExiste(username)) {
+                                out.writeBoolean(false);
+                                username = in.readUTF();
+                            }
+                            out.writeBoolean(true);
                         } else {
-                            utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarUtilizadorNormal(userName, userPassword);
+                            while (serverDatabase.getUtilizadoresDataBase().utilizadorExiste(username)) {
+                                out.writeBoolean(false);
+                                username = in.readUTF();
+                            }
+                            out.writeBoolean(true);
                         }
+                        String password_received = in.readUTF();
+                        if (userTypeResgister.equals("admin"))  utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador(username, name, password_received);
+                        else utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarUtilizadorNormal(username, name, password_received);
                         utilizadorAdicionado.serialize(out);
                         break;
                     case "booking":
@@ -109,8 +123,9 @@ public class ClientHandler implements Runnable{
                         String clientID = stringTokenizer.nextToken();
                         Boolean bookingRegistered = false;
                         Reserva reserva = new Reserva();
-                        /** Verificar que voo e utilizador existem */
-                        if(serverDatabase.getVoosDataBase().vooExiste(flightID)){
+                        if(serverDatabase.getLockedDay() != null && isSameDay(LocalDateTime.now(), serverDatabase.getLockedDay())){
+                            out.writeBoolean(false);
+                        }else if(serverDatabase.getVoosDataBase().vooExiste(flightID)){
                             if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(clientID)){
                                 /** Adicionar reserva à base de dados */
                                 reserva = serverDatabase.getReservasDataBase().adicionaReserva(clientID, flightID);
@@ -139,12 +154,16 @@ public class ClientHandler implements Runnable{
                         }
                         break;
                     case "delete":
-                        /** delete;booking;idReserva; */
+                        /** delete;booking;idReserva;idUtilizador */
                         String objectType = stringTokenizer.nextToken();
                         switch (objectType) {
                             case "booking":
                                 String idReserva = stringTokenizer.nextToken();
+                                String idUtilizador = stringTokenizer.nextToken();
                                 Boolean reservaExistia = false;
+                                if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(idUtilizador)){
+                                    serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(idUtilizador).removeReserva(idReserva);
+                                }
                                 if(serverDatabase.getReservasDataBase().reservaExiste(idReserva)){
                                     Reserva reservaRemover = serverDatabase.getReservasDataBase().getReservaByID(idReserva);
                                     if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(reservaRemover.getIdCliente())){
@@ -159,6 +178,26 @@ public class ClientHandler implements Runnable{
                         
                             default:
                                 break;
+                        }
+                        break;
+                    case "endDay":
+                        /** endDay; */
+                        serverDatabase.setLockedDay(LocalDateTime.now());
+                        serverDatabase.getReservasDataBase().removerReservasNumDia(LocalDateTime.now(), serverDatabase.getUtilizadoresDataBase());
+                        break;
+                    case "passwordChange":
+                        /** passwordChange;id;password; */
+                        String user_Type = stringTokenizer.nextToken();
+                        String user_ID = stringTokenizer.nextToken();
+                        String newPassword = stringTokenizer.nextToken();
+                        if(user_Type.equals("admin")){
+                            if(serverDatabase.getUtilizadoresDataBase().administradorExiste(user_ID)){
+                                serverDatabase.getUtilizadoresDataBase().getAdministradorByID(user_ID).setPasswordHash(newPassword.hashCode());
+                            }
+                        } else{
+                            if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(user_ID)){
+                                serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(user_ID).setPasswordHash(newPassword.hashCode());
+                            }
                         }
                         break;
                     case "save":
@@ -196,43 +235,16 @@ public class ClientHandler implements Runnable{
     }
 
     /**
-     * Serializa uma string usando a formatação UTF-8
-     * @param string A string a ser serializada
-     * @return O array de bytes resultante
-     * @throws UnsupportedEncodingException Ocorre se a codificação inserida não exista
+     * Compara duas datas e diz se ocorrem no mesmo ano mês e dia
+     * @param date1 A data a comparar
+     * @param date2 A data a comparar
+     * @return {@code true} se as datas forem no mesmo ano mês e dia, {@code false} caso contrário
      */
-     public static byte[] Serialize_String(String string) throws UnsupportedEncodingException {
-        Charset charset = Charset.forName("UTF-8");
-        byte[] bytes = charset.encode(string).array();        
-        return bytes;
-    }
+    private boolean isSameDay(LocalDateTime date1, LocalDateTime date2){
+        boolean sameDay = false;
+        if(date1.getYear() == date2.getYear() && date1.getMonth() == date2.getMonth() && date1.getDayOfMonth() == date2.getDayOfMonth())
+            sameDay = true;
+        return sameDay;
 
-    /**
-     * Deserialização de strings 
-     * @param bytes O array de bytes que será convertido para string
-     * @return A string resultante
-    */
-    public static String Deserialize_String(byte[] bytes) {
-        Charset charset = Charset.forName("UTF-8");
-        String string = new String(bytes,charset);
-        return string;
-    }
-
-    /**
-     * Serialização de inteiros 
-     * @param x O inteiro a ser serializado
-     * @return O array de bytes resultante
-    */    
-    public static byte[] Serialize_Int(int x) {
-        return ByteBuffer.allocate(4).putInt(x).array();
-    }
-
-    /**
-     * Deserialização de inteiros 
-     * @param bytes O array de bytes a ser convertido para inteiro
-     * @return O inteiro resultante
-    */
-    public static int Deserialize_Int(byte[] bytes) {
-        return ByteBuffer.wrap(bytes).getInt();
     }
 }

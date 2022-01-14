@@ -1,3 +1,4 @@
+package Business;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -5,6 +6,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import Database.ReservasDB;
 
 public class Utilizador implements Serializable{
     /** Identificador de utilizador */

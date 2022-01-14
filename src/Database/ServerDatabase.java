@@ -1,3 +1,4 @@
+package Database;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,6 +10,7 @@ public class ServerDatabase {
     private UtilizadoresDB utilizadoresDataBase;
     private VoosDB voosDataBase;
     private ReservasDB reservasDataBase;
+    private LocalDateTime lockedDay;
 
     /**
      * Construtor vazio de ServerDatabase
@@ -17,6 +19,7 @@ public class ServerDatabase {
         this.utilizadoresDataBase = new UtilizadoresDB();
         this.voosDataBase = new VoosDB();
         this.reservasDataBase = new ReservasDB();
+        this.lockedDay = null;
     }
 
 
@@ -68,6 +71,24 @@ public class ServerDatabase {
     public void setReservasDataBase(ReservasDB reservasDataBase) {
         this.reservasDataBase = reservasDataBase;
     }
+
+
+    /**
+     * Obter a data que contém o dia que está bloqueado
+     * @return
+     */
+    public LocalDateTime getLockedDay() {
+        return this.lockedDay;
+    }
+
+    /**
+     * Definir um dia fechado, onde já não é possível efetuar reservas
+     * @param lockedDay Data que contem o dia que está bloqueado
+     */
+    public void setLockedDay(LocalDateTime lockedDay) {
+        this.lockedDay = lockedDay;
+    }
+
 
 
     /**

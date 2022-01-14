@@ -7,6 +7,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import UI.TextUI;
+
 public class Client {
 
     public static void main(String[] args) {
