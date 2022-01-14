@@ -35,7 +35,12 @@ public class VoosDB implements Serializable{
     public Voo adicionaVoo(String origem, String destino, int capacidade){
         String id = geraIdentificadorUnico();
         Voo voo = new Voo(id, origem, destino, capacidade);
-        this.voos.put(voo.getId(), voo);
+        lock.lock();
+        try{
+            this.voos.put(voo.getId(), voo);
+        }finally{
+            lock.unlock();
+        }
         return voo;
     }
 
@@ -46,10 +51,16 @@ public class VoosDB implements Serializable{
      */
     public boolean removerVoo(String id){
         boolean vooExiste = false;
-        if(this.voos.containsKey(id)){
-            this.voos.remove(id);
-            vooExiste = true;
+        lock.lock();
+        try{
+            if(this.voos.containsKey(id)){
+                this.voos.remove(id);
+                vooExiste = true;
+            }
+        }finally{
+            lock.unlock();
         }
+        
         return vooExiste;
 
     }
@@ -61,7 +72,13 @@ public class VoosDB implements Serializable{
      */
     public boolean vooExiste(String id){
         boolean vooExiste = false;
-        if(this.voos.containsKey(id)) vooExiste = true;
+        lock.lock();
+        try{
+            if(this.voos.containsKey(id)) vooExiste = true;
+        }finally{
+            lock.unlock();
+        }
+        
         return vooExiste;
     }
 
@@ -72,7 +89,13 @@ public class VoosDB implements Serializable{
      */
     public Voo getVooByID(String id){
         Voo voo = null;
-        if(this.voos.containsKey(id)) voo = this.voos.get(id);
+        lock.lock();
+        try{
+            if(this.voos.containsKey(id)) voo = this.voos.get(id);
+        }finally{
+            lock.unlock();
+        }
+        
         return voo;
     }
 
@@ -82,7 +105,13 @@ public class VoosDB implements Serializable{
      */
     public boolean existemVoosRegistados(){
         boolean existemVoos = false;
-        if(this.voos.size() > 0) existemVoos = true;
+        lock.lock();
+        try{
+            if(this.voos.size() > 0) existemVoos = true;
+        }finally{
+            lock.unlock();
+        }
+        
         return existemVoos;
     }
 
@@ -95,8 +124,13 @@ public class VoosDB implements Serializable{
         out.writeInt(this.voos.size());
         System.out.println("[Voos DataBase] Existem: " + this.voos.size() + " voos");
         /* Enviar os voos um a um */
-        for (Map.Entry<String,Voo> entry : this.voos.entrySet()) {
-            entry.getValue().serialize(out);
+        lock.lock();
+        try{
+            for (Map.Entry<String,Voo> entry : this.voos.entrySet()) {
+                entry.getValue().serialize(out);
+            }
+        }finally{
+            lock.unlock();
         }
     }
 

@@ -40,7 +40,12 @@ public class ReservasDB implements Serializable {
     public Reserva adicionaReserva(String idCliente, String idVoo){
         String id = geraIdentificadorUnico();
         Reserva reserva = new Reserva(id, idCliente, idVoo, LocalDateTime.now());
-        this.reservas.put(reserva.getIdReserva(), reserva);
+        lock.lock();
+        try{
+            this.reservas.put(reserva.getIdReserva(), reserva);
+        }finally{
+            lock.unlock();
+        }
         return reserva;
     }
 
@@ -51,10 +56,16 @@ public class ReservasDB implements Serializable {
      */
     public boolean removerReserva(String id){
         boolean reservaExiste = false;
-        if(this.reservas.containsKey(id)){
-            this.reservas.remove(id);
-            reservaExiste = true;
+        lock.lock();
+        try{
+            if(this.reservas.containsKey(id)){
+                this.reservas.remove(id);
+                reservaExiste = true;
+            }
+        }finally{
+            lock.unlock();
         }
+        
         return reservaExiste;
     }
 
@@ -65,7 +76,13 @@ public class ReservasDB implements Serializable {
      */
     public boolean reservaExiste(String id){
         boolean reservaExiste = false;
-        if(this.reservas.containsKey(id)) reservaExiste = true;
+        
+        lock.lock();
+        try{
+            if(this.reservas.containsKey(id)) reservaExiste = true;
+        }finally{
+            lock.unlock();
+        }
         return reservaExiste;
     }
 
@@ -76,7 +93,13 @@ public class ReservasDB implements Serializable {
      */
     public Reserva getReservaByID(String id){
         Reserva reserva = null;
-        if(this.reservas.containsKey(id)) reserva = this.reservas.get(id);
+        lock.lock();
+        try{
+            if(this.reservas.containsKey(id)) reserva = this.reservas.get(id);
+        }finally{
+            lock.unlock();
+        }
+        
         return reserva;
     }
 
@@ -86,7 +109,13 @@ public class ReservasDB implements Serializable {
      */
     public boolean existemReservasRegistados(){
         boolean existemReservas = false;
-        if(this.reservas.size() > 0) existemReservas = true;
+        lock.lock();
+        try{
+            if(this.reservas.size() > 0) existemReservas = true;
+        }finally{
+            lock.unlock();
+        }
+
         return existemReservas;
     }
 
@@ -100,9 +129,15 @@ public class ReservasDB implements Serializable {
         System.out.println("[Reservas DataBase] Existem: " + this.reservas.size() + " reservas");
         System.out.println("[Reservas DataBase] Sending bookings to client");
         /* Enviar os voos um a um */
-        for (Map.Entry<String,Reserva> entry : this.reservas.entrySet()) {
-            entry.getValue().serialize(out);
+        lock.lock();
+        try{
+            for (Map.Entry<String,Reserva> entry : this.reservas.entrySet()) {
+                entry.getValue().serialize(out);
+            }
+        }finally{
+            lock.unlock();
         }
+        
     }
 
     /**
@@ -111,10 +146,16 @@ public class ReservasDB implements Serializable {
      * @param utilizadoresDB A base de dados de utilizadores
      */
     public void removerReservasNumDia(LocalDateTime date, UtilizadoresDB utilizadoresDB){
-        for (Map.Entry<String,Reserva> entry : this.reservas.entrySet()) {
-            if(isSameDay(date, entry.getValue().getDate())){
-                this.reservas.remove(entry.getKey());
+        
+        lock.lock();
+        try{
+            for (Map.Entry<String,Reserva> entry : this.reservas.entrySet()) {
+                if(isSameDay(date, entry.getValue().getDate())){
+                    this.reservas.remove(entry.getKey());
+                }
             }
+        }finally{
+            lock.unlock();
         }
     }
 

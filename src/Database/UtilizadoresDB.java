@@ -2,6 +2,7 @@ package Database;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import Business.Utilizador;
@@ -39,7 +40,12 @@ public class UtilizadoresDB implements Serializable{
     public Utilizador adicionarUtilizadorNormal(String username, String nome,String password){
         Utilizador utilizador = new Utilizador(username, nome, password.hashCode(),false);
         utilizador.toString();
-        this.utilizadores.put(utilizador.getId(), utilizador);
+        lock.lock();
+        try{
+            this.utilizadores.put(utilizador.getId(), utilizador);
+        }finally{
+            lock.unlock();
+        }
         return utilizador;
     }
 
@@ -52,7 +58,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public Utilizador adicionarAdministrador(String username, String nome,String password){
         Utilizador administrador = new Utilizador(username, nome, password.hashCode(),true);
-        this.administradores.put(administrador.getId(), administrador);
+        lock.lock();
+        try{
+            this.administradores.put(administrador.getId(), administrador);
+        }finally{
+            lock.unlock();
+        }
         return administrador;
     }
 
@@ -63,9 +74,14 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean removerUtilizador(String id){
         boolean utilizadorExiste = false;
-        if(this.utilizadores.containsKey(id)){
-            this.utilizadores.remove(id);
-            utilizadorExiste = true;
+        lock.lock();
+        try{
+            if(this.utilizadores.containsKey(id)){
+                this.utilizadores.remove(id);
+                utilizadorExiste = true;
+            }
+        }finally{
+            lock.unlock();
         }
         return utilizadorExiste;
     }
@@ -77,9 +93,14 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean removerAdministrador(String id){
         boolean administradorExiste = false;
-        if(this.administradores.containsKey(id)){
-            this.administradores.remove(id);
-            administradorExiste = true;
+        lock.lock();
+        try{
+            if(this.administradores.containsKey(id)){
+                this.administradores.remove(id);
+                administradorExiste = true;
+            }
+        }finally{
+            lock.unlock();
         }
         return administradorExiste;
     }
@@ -91,7 +112,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean utilizadorExiste(String id){
         boolean utilizadorExiste = false;
-        if(this.utilizadores.containsKey(id)) utilizadorExiste = true;
+        lock.lock();
+        try{
+            if(this.utilizadores.containsKey(id)) utilizadorExiste = true;
+        }finally{
+            lock.unlock();
+        }
         return utilizadorExiste;
     }
 
@@ -102,7 +128,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean administradorExiste(String id){
         boolean administradorExiste = false;
-        if(this.administradores.containsKey(id)) administradorExiste = true;
+        lock.lock();
+        try{
+            if(this.administradores.containsKey(id)) administradorExiste = true;
+        }finally{
+            lock.unlock();
+        }
         return administradorExiste;
     }
 
@@ -113,7 +144,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public Utilizador getUtilizadorByID(String id){
         Utilizador utilizador = null;
-        if(this.utilizadores.containsKey(id)) utilizador = this.utilizadores.get(id);
+        lock.lock();
+        try{
+            if(this.utilizadores.containsKey(id)) utilizador = this.utilizadores.get(id);
+        }finally{
+            lock.unlock();
+        }
         return utilizador;
     }
 
@@ -124,7 +160,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public Utilizador getAdministradorByID(String id){
         Utilizador administrador = null;
-        if(this.administradores.containsKey(id)) administrador = this.administradores.get(id);
+        lock.lock();
+        try{
+            if(this.administradores.containsKey(id)) administrador = this.administradores.get(id);
+        }finally{
+            lock.unlock();
+        }
         return administrador;
     }
 
@@ -134,7 +175,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean existemUtilizadoresRegistados(){
         boolean existemUtilizadores = false;
-        if(this.utilizadores.size() > 0) existemUtilizadores = true;
+        lock.lock();
+        try{
+            if(this.utilizadores.size() > 0) existemUtilizadores = true;
+        }finally{
+            lock.unlock();
+        }
         return existemUtilizadores;
     }
 
@@ -144,7 +190,12 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean existemAdministradoresRegistados(){
         boolean existemAdministradores = false;
-        if(this.administradores.size() > 0) existemAdministradores = true;
+        lock.lock();
+        try{
+            if(this.administradores.size() > 0) existemAdministradores = true;
+        }finally{
+            lock.unlock();
+        }
         return existemAdministradores;
     }
 
@@ -156,9 +207,14 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean autenticaUtilizador(String id, String password){
         boolean validPassword = false;
-        if(this.utilizadorExiste(id)){
-            Utilizador utilizador = this.utilizadores.get(id);
-            if(utilizador.getPasswordHash() == password.hashCode()) validPassword = true;
+        lock.lock();
+        try{
+            if(this.utilizadorExiste(id)){
+                Utilizador utilizador = this.utilizadores.get(id);
+                if(utilizador.getPasswordHash() == password.hashCode()) validPassword = true;
+            }
+        }finally{
+            lock.unlock();
         }
         return validPassword;
     }
@@ -170,9 +226,14 @@ public class UtilizadoresDB implements Serializable{
      */
     public boolean autenticaAdministrador(String id, String password){
         boolean validPassword = false;
-        if(this.administradorExiste(id)){
-            Utilizador administrador = this.administradores.get(id);
-            if(administrador.getPasswordHash() == password.hashCode()) validPassword = true;
+        lock.lock();
+        try{
+            if(this.administradorExiste(id)){
+                Utilizador administrador = this.administradores.get(id);
+                if(administrador.getPasswordHash() == password.hashCode()) validPassword = true;
+            }
+        }finally{
+            lock.unlock();
         }
         return validPassword;
     }
