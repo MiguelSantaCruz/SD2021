@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Scanner;
+
 import Business.Utilizador;
 import Business.Voo;
 
@@ -170,7 +171,8 @@ public class TextUI implements Serializable{
     public void menuUtilizador(Utilizador utilizador){
         Menu menu = new Menu(new String[]{
             "Alterar password",
-            "Efetuar reserva",
+            "Efetuar reserva pelo código de voo",
+            "Efetuar reserva pelo percurso do voo",
             "Ver reservas efetuadas",
             "Adicionar voos a reserva",
             "Cancelar reserva",
@@ -179,10 +181,11 @@ public class TextUI implements Serializable{
         menu.setTitulo( utilizador.getName() + " - Área autenticada");
         menu.setHandler(1, () -> alterarPassword(utilizador));
         menu.setHandler(2, () -> efetuarReserva(utilizador));
-        menu.setHandler(3, () -> verReservas(utilizador));
-        menu.setHandler(4, () -> adicionarVooReserva());
-        menu.setHandler(5, () -> cancelarReserva(utilizador));
-        menu.setHandler(6, () -> verVoos());
+        menu.setHandler(3, () -> efetuarReservaPercurso(utilizador));
+        menu.setHandler(4, () -> verReservas(utilizador));
+        menu.setHandler(5, () -> adicionarVooReserva());
+        menu.setHandler(6, () -> cancelarReserva(utilizador));
+        menu.setHandler(7, () -> verVoos());
         menu.run();
     }
 
@@ -207,6 +210,59 @@ public class TextUI implements Serializable{
         }
     }
 
+    /**
+     * Efetuar uma reserva tendo o percurso 
+     */
+    public void efetuarReservaPercurso(Utilizador utilizador){
+        System.out.println("Insira data inicio aaaa-mm-dd:");
+        System.out.print("> ");
+        String data = scin.nextLine();
+        String bookingRequest = "bookingEscalas;" + utilizador.getId() + ";" + data + ";";
+
+        System.out.println("Insira data fim aaaa-mm-dd:");
+        System.out.print("> ");
+        String dataF = scin.nextLine();
+        bookingRequest = bookingRequest + dataF + ";";
+
+        System.out.println("Quantas escalas terá a viagem?");
+        System.out.print("> ");
+        String num = scin.nextLine();
+        bookingRequest =   bookingRequest + num + ";";
+        int numeroEscalas = Integer.parseInt(num);
+
+        System.out.println("Insira a origem do voo:");
+        System.out.print("> ");
+        String idVoo = scin.nextLine();
+        bookingRequest = bookingRequest + idVoo + ";";
+        
+        for(int i=0;i<numeroEscalas;i++){
+            System.out.println("Insira o destino da escala:");
+            System.out.print("> ");
+            String idV = scin.nextLine();
+            bookingRequest =   bookingRequest + idV + ";";
+        }
+        System.out.println("Insira destino final do voo:");
+        System.out.print("> ");
+        String idVfinal= scin.nextLine();
+        bookingRequest =  bookingRequest + idVfinal + ";";
+        try {
+            out.writeUTF(bookingRequest);
+            Boolean bookingRegistered = in.readBoolean();
+            if(bookingRegistered) {
+                int size = in.readInt();
+                System.out.println("─── Voos ──────────────────────────────");
+                for (int i = 0; i < size; i++){
+                    Voo voo = Voo.deserialize(in);
+                    System.out.println(voo.toString());
+                }
+                System.out.println("Reserva registada com sucesso");
+                System.out.println("ID da reserva: " + in.readUTF());
+            }
+            else showErrorMessage("Não foram encontrados voos");
+        } catch (IOException e) {
+            showErrorMessage("Não foi possível efetuar ligação com o servidor");
+        }
+    }
     /**
      * Mostra uma lista de todas as reservas efetuadas
      * @param utilizador O utilizador que possui as reservas

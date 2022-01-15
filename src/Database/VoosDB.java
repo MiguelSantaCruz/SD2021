@@ -2,6 +2,9 @@ package Database;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +21,7 @@ public class VoosDB implements Serializable{
      * Lock da base de dados de voos
      */
     public ReentrantLock lock;
+    private static String DATE_FORMAT = "yyyy-MM-dd";
 
     /**
      * Construtor vazio de GestVoos
@@ -34,9 +38,9 @@ public class VoosDB implements Serializable{
      * @param capacidade A capacidade em termo do número de pessoas do avião
      * @return O voo adicionado
      */
-    public Voo adicionaVoo(String origem, String destino, int capacidade){
+    public Voo adicionaVoo(String origem, String destino, int capacidade, String data){
         String id = geraIdentificadorUnico();
-        Voo voo = new Voo(id, origem, destino, capacidade);
+        Voo voo = new Voo(id, origem, destino, capacidade, data);
         lock.lock();
         try{
             this.voos.put(voo.getId(), voo);
@@ -83,6 +87,63 @@ public class VoosDB implements Serializable{
         
         return vooExiste;
     }
+
+
+    /**
+     * Verifica se um voo existe na base de dados origem destino
+     * @param id O identificador do voo
+     * @return {@code true} se o voo existe, {@code false} caso não exista
+     * @throws ParseException
+     */
+    public boolean vooExisteOrigDest(String origem, String destino, String dataI,String dataF) throws ParseException{
+        boolean res = false;
+        Voo voo = new Voo(null,origem,destino,0,"2021-01-02");
+        lock.lock();
+        try{String key = null;
+            key = voos.entrySet()
+                .stream()                       
+                .filter(e -> e.getValue().temOrigem(voo))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+            if(key != null){
+                if(comparaData(getVooByID(key),dataI,dataF) == false) res = true;
+            }
+            
+        }finally{
+            lock.unlock();
+        }
+        
+        return res;
+    }
+
+    public String vooOrigDest(String origem, String destino, String dataI,String dataF) throws ParseException{
+        String id = null;
+        Voo voo = new Voo(null,origem,destino,0,"2021-01-02");
+        lock.lock();
+        try{
+            id = voos.entrySet()
+                .stream()                       
+                .filter(e -> e.getValue().temOrigem(voo))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);            
+        }finally{
+            lock.unlock();
+        }
+        return id;
+    }
+
+    public boolean comparaData(Voo v, String d,String df) throws ParseException{
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
+        LocalDate di = LocalDate.parse(d, formatter);
+        LocalDate dF = LocalDate.parse(df, formatter);
+        boolean res = (v.getData().isBefore(di) || v.getData().isAfter(dF));
+
+        return res;
+
+    }
+
 
     /**
      * Devolve um voo dado o seu identificador

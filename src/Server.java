@@ -15,11 +15,11 @@ public class Server {
     public static void main(String[] args) {
         ServerDatabase serverDatabase = new ServerDatabase();
         
-        serverDatabase.getVoosDataBase().adicionaVoo("New york [USA]", "Lisbon [PT]", 230);
-        serverDatabase.getVoosDataBase().adicionaVoo("London [UK]", "Tokyo [JP]", 198);
-        serverDatabase.getVoosDataBase().adicionaVoo("Moscow [RU]", "Warsow [PO]", 145);
-        serverDatabase.getVoosDataBase().adicionaVoo("Cape Town [SA]", "Beijing [CN]",267);
-        serverDatabase.getVoosDataBase().adicionaVoo("Lisbon [PT]", "Paris [FR]", 234);
+        serverDatabase.getVoosDataBase().adicionaVoo("New york", "Lisbon", 230,"2022-01-13");
+        serverDatabase.getVoosDataBase().adicionaVoo("London", "Tokyo", 198,"2022-01-13");
+        serverDatabase.getVoosDataBase().adicionaVoo("Moscow", "Warsow", 145,"2022-01-09");
+        serverDatabase.getVoosDataBase().adicionaVoo("Cape Town", "Beijing",267,"2022-01-09");
+        serverDatabase.getVoosDataBase().adicionaVoo("Lisbon", "Paris", 234,"2022-01-13");
         
         Utilizador admin = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador("admin","Administrador 1", "12345");
         try (ServerSocket serverSocket = new ServerSocket(Server.port)) {

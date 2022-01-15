@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.text.ParseException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -141,6 +143,50 @@ public class ClientHandler implements Runnable{
                         out.writeBoolean(bookingRegistered);
                         if(bookingRegistered) out.writeUTF(reserva.getIdReserva());
                         break;
+                    case "bookingEscalas":
+                        /** bookingEscalas;idUtilizador;dataI;dataF;numeroEscalas;origem;destino; */
+                        Boolean bookingReg = true;
+                        String userId = stringTokenizer.nextToken();
+                        String dataI = stringTokenizer.nextToken();
+                        String dataF = stringTokenizer.nextToken();
+
+                        int numeroEscalas =  Integer.parseInt(stringTokenizer.nextToken());
+                        
+                        if(serverDatabase.getLockedDay() != null && isSameDay(LocalDateTime.now(), serverDatabase.getLockedDay())){
+                            out.writeBoolean(false);
+                        }else{
+                            List<Voo> voosViagem = new ArrayList<>();
+                            String origem = stringTokenizer.nextToken();
+                            for(int i=0;i < numeroEscalas+1;i++ ){
+                                String dest = stringTokenizer.nextToken();
+                                if(serverDatabase.getVoosDataBase().vooExisteOrigDest(origem,dest,dataI,dataF)){
+                                    String idVoo = serverDatabase.getVoosDataBase().vooOrigDest(origem,dest,dataI,dataF);
+                                    if(serverDatabase.getVoosDataBase().vooExiste(idVoo)){
+                                        voosViagem.add(serverDatabase.getVoosDataBase().getVooByID(idVoo));
+                                    }
+                                    origem = dest;
+                                }
+                                else {
+                                    bookingReg = false;
+                                }
+                            }
+                            out.writeBoolean(bookingReg);
+                            if(bookingReg){
+                                Reserva res = new Reserva();
+                                if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(userId)){
+                                    res = serverDatabase.getReservasDataBase().adicionaReserva(userId);
+                                    serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(userId).adicionaReserva(res.getIdReserva());
+                                }
+                                
+                                out.writeInt(voosViagem.size());
+                                for (Voo voo : voosViagem) {
+                                    res.adicionarIdVoo(voo.getId());
+                                    voo.serialize(out);
+                                }
+                                out.writeUTF(res.getIdReserva());
+                            }
+                        }
+                       break;
                     case "add":
                         /** add;flight;origem;destino;capacidade */
                         /** add;flightToReservation;idReserva; */
@@ -150,7 +196,8 @@ public class ClientHandler implements Runnable{
                                 String origem = stringTokenizer.nextToken();
                                 String destino = stringTokenizer.nextToken();
                                 int capacidade = Integer.valueOf(stringTokenizer.nextToken());
-                                Voo voo = serverDatabase.getVoosDataBase().adicionaVoo(origem, destino, capacidade);
+                                String data = stringTokenizer.nextToken();
+                                Voo voo = serverDatabase.getVoosDataBase().adicionaVoo(origem, destino, capacidade,data);
                                 voo.serialize(out);
                                 break;
                             case "flightToReservation":
@@ -256,7 +303,7 @@ public class ClientHandler implements Runnable{
             this.socket.shutdownInput();
             this.socket.shutdownOutput();
             socket.close();
-        } catch (IOException e) {
+        } catch (IOException | ParseException e) {
             System.out.println("[Client Handler] Conexão terminada -> " + socket.getInetAddress() + ":" + socket.getPort());
         }
         
