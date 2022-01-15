@@ -37,9 +37,9 @@ public class ReservasDB implements Serializable {
      * @param idVoo O Identificador do voo
      * @return A reserva adicionada
      */
-    public Reserva adicionaReserva(String idCliente, String idVoo){
+    public Reserva adicionaReserva(String idCliente){
         String id = geraIdentificadorUnico();
-        Reserva reserva = new Reserva(id, idCliente, idVoo, LocalDateTime.now());
+        Reserva reserva = new Reserva(id, idCliente, LocalDateTime.now());
         lock.lock();
         try{
             this.reservas.put(reserva.getIdReserva(), reserva);
@@ -126,8 +126,6 @@ public class ReservasDB implements Serializable {
     public void getAllReservas(DataOutputStream out) throws IOException{
         /* Escrever o tamanho do map */
         out.writeInt(this.reservas.size());
-        System.out.println("[Reservas DataBase] Existem: " + this.reservas.size() + " reservas");
-        System.out.println("[Reservas DataBase] Sending bookings to client");
         /* Enviar os voos um a um */
         lock.lock();
         try{

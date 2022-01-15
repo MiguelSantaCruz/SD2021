@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import Business.Reserva;
@@ -41,7 +42,7 @@ public class ClientHandler implements Runnable{
             while (!socket.isInputShutdown()) {
                 /* String recebida pelo cliente */
                 String receivedString = new String(in.readUTF());
-                System.out.println("[Client Handler] Recebido: " + receivedString);
+                System.out.println("[Client Handler" + socket.getInetAddress() + "] Recebido: " + receivedString);
                 /**
                  * As strings enviadas pelo cliente vem no tipo: login;admin;João;12345
                  * Utiliza-se o stringTokenizer para obter os diferentes campos
@@ -57,16 +58,20 @@ public class ClientHandler implements Runnable{
                         /** Autenticar utilizador ou administrador */
                         String userType = stringTokenizer.nextToken();
                         String id = stringTokenizer.nextToken();
-                        String password = stringTokenizer.nextToken();
+                        int passwordHashLogin = Integer.valueOf(stringTokenizer.nextToken());
                         boolean validLogin = false;
-                        if(userType.equals("admin") && serverDatabase.getUtilizadoresDataBase().autenticaAdministrador(id, password)) validLogin = true;
-                        if(userType.equals("user") && serverDatabase.getUtilizadoresDataBase().autenticaUtilizador(id, password)) validLogin = true;
+                        if(userType.equals("admin") && serverDatabase.getUtilizadoresDataBase().autenticaAdministrador(id, passwordHashLogin)) validLogin = true;
+                        if(userType.equals("user") && serverDatabase.getUtilizadoresDataBase().autenticaUtilizador(id, passwordHashLogin)) validLogin = true;
                         out.writeBoolean(validLogin);
                         /** Enviar o utilizador caso a autenticação tenha sido bem sucedida */
                         if(validLogin){
-                            Utilizador utilizador = new Utilizador();
-                            if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(id)) utilizador = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(id);
-                            if(serverDatabase.getUtilizadoresDataBase().administradorExiste(id)) utilizador = serverDatabase.getUtilizadoresDataBase().getAdministradorByID(id);
+                            Utilizador utilizador;
+                            /** Tentar obter um utilizador normal */
+                            utilizador = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(id);
+                            /** Se o utilizador resultante for null obter um administrador */
+                            if(utilizador == null) utilizador = serverDatabase.getUtilizadoresDataBase().getAdministradorByID(id);
+                            /** Se ainda continuar null (Não acontece em situações normais) criar um utilizador vazio */
+                            if(utilizador == null) utilizador = new Utilizador();
                             utilizador.serialize(out);
                         }
                         break;
@@ -82,19 +87,19 @@ public class ClientHandler implements Runnable{
                             case "bookings":
                                 /** Listar todas as reservas de um utilizador */
                                 String userId = stringTokenizer.nextToken();
-                                System.out.println("User ID booking: " + userId);
-                                if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(userId)){
-                                    Utilizador user = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(userId);
-                                    String list = user.getlistBookings(serverDatabase.getReservasDataBase());
+                                Utilizador user = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(userId);
+                                if(user == null) out.writeUTF("");
+                                else {
+                                    String list = user.getlistBookings(serverDatabase.getReservasDataBase(),serverDatabase.getVoosDataBase());
                                     out.writeUTF(list);
-                                } else out.writeUTF("");
+                                }
                                 break;
                             default:
                                 break;
                         }
                         break;
                     case "register":
-                        /** register;user/admin;username;name; */
+                        /** register;user/admin;username;name;passwordHash */
                         String userTypeResgister = stringTokenizer.nextToken();
                         String username = stringTokenizer.nextToken();
                         String name = stringTokenizer.nextToken();
@@ -112,9 +117,9 @@ public class ClientHandler implements Runnable{
                             }
                             out.writeBoolean(true);
                         }
-                        String password_received = in.readUTF();
-                        if (userTypeResgister.equals("admin"))  utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador(username, name, password_received);
-                        else utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarUtilizadorNormal(username, name, password_received);
+                        int password_received_hash = in.readInt();
+                        if (userTypeResgister.equals("admin"))  utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarAdministrador(username, name, password_received_hash);
+                        else utilizadorAdicionado = serverDatabase.getUtilizadoresDataBase().adicionarUtilizadorNormal(username, name, password_received_hash);
                         utilizadorAdicionado.serialize(out);
                         break;
                     case "booking":
@@ -126,19 +131,19 @@ public class ClientHandler implements Runnable{
                         if(serverDatabase.getLockedDay() != null && isSameDay(LocalDateTime.now(), serverDatabase.getLockedDay())){
                             out.writeBoolean(false);
                         }else if(serverDatabase.getVoosDataBase().vooExiste(flightID)){
-                            if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(clientID)){
                                 /** Adicionar reserva à base de dados */
-                                reserva = serverDatabase.getReservasDataBase().adicionaReserva(clientID, flightID);
+                                reserva = serverDatabase.getReservasDataBase().adicionaReserva(clientID);
+                                reserva.adicionarIdVoo(flightID);
                                 /** Adicionar identificador de reserva ao utilizador */
                                 serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(clientID).adicionaReserva(reserva.getIdReserva());
                                 bookingRegistered = true;
-                            }
                         }
                         out.writeBoolean(bookingRegistered);
                         if(bookingRegistered) out.writeUTF(reserva.getIdReserva());
                         break;
                     case "add":
                         /** add;flight;origem;destino;capacidade */
+                        /** add;flightToReservation;idReserva; */
                         String objectToAdd = stringTokenizer.nextToken();
                         switch (objectToAdd) {
                             case "flight":
@@ -148,7 +153,32 @@ public class ClientHandler implements Runnable{
                                 Voo voo = serverDatabase.getVoosDataBase().adicionaVoo(origem, destino, capacidade);
                                 voo.serialize(out);
                                 break;
-                        
+                            case "flightToReservation":
+                                String idReserva = stringTokenizer.nextToken();
+                                if (!serverDatabase.getReservasDataBase().reservaExiste(idReserva)) out.writeBoolean(false);
+                                else{
+                                    out.writeBoolean(true);
+                                    Reserva reserva2 = serverDatabase.getReservasDataBase().getReservaByID(idReserva);
+                                    List<Voo> voos = serverDatabase.getVoosDataBase().getAllVoosFromDestination(out, reserva2.getLastDestination(serverDatabase.getVoosDataBase()));
+                                    String lastDestination = reserva2.getLastDestination(serverDatabase.getVoosDataBase());
+                                    if(lastDestination != null) out.writeUTF(lastDestination);
+                                    else out.writeUTF("");
+                                    out.writeInt(voos.size());
+                                    for (Voo voo2 : voos) {
+                                        voo2.serialize(out);
+                                    }
+                                    String idVoo = in.readUTF();
+                                    if(!serverDatabase.getVoosDataBase().vooExiste(idVoo)) out.writeBoolean(false);
+                                    else {
+                                        Voo voo2 = serverDatabase.getVoosDataBase().getVooByID(idVoo);
+                                        if(voo2.getOrigem() != reserva2.getLastDestination(serverDatabase.getVoosDataBase())) out.writeBoolean(false);
+                                        else {
+                                            out.writeBoolean(true);
+                                            reserva2.adicionarIdVoo(idVoo);
+                                        }
+                                    }
+                                }
+                                break;
                             default:
                                 break;
                         }
@@ -161,17 +191,16 @@ public class ClientHandler implements Runnable{
                                 String idReserva = stringTokenizer.nextToken();
                                 String idUtilizador = stringTokenizer.nextToken();
                                 Boolean reservaExistia = false;
-                                if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(idUtilizador)){
-                                    serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(idUtilizador).removeReserva(idReserva);
-                                }
-                                if(serverDatabase.getReservasDataBase().reservaExiste(idReserva)){
-                                    Reserva reservaRemover = serverDatabase.getReservasDataBase().getReservaByID(idReserva);
-                                    if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(reservaRemover.getIdCliente())){
-                                        Utilizador utilizador = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(reservaRemover.getIdCliente());
+                                Utilizador utilizador = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(idUtilizador);
+                                if(utilizador != null) utilizador.removeReserva(idReserva);
+                                Reserva reservaRemover = serverDatabase.getReservasDataBase().getReservaByID(idReserva);
+                                if(reservaRemover != null ) {
+                                    Utilizador utilizadorReserva = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(reservaRemover.getIdCliente());
+                                    if(utilizadorReserva != null){
                                         utilizador.removeReserva(idReserva);
+                                        serverDatabase.getReservasDataBase().removerReserva(idReserva);
+                                        reservaExistia = true;
                                     }
-                                    serverDatabase.getReservasDataBase().removerReserva(idReserva);
-                                    reservaExistia = true;
                                 }
                                 out.writeBoolean(reservaExistia);
                                 break;
@@ -186,18 +215,17 @@ public class ClientHandler implements Runnable{
                         serverDatabase.getReservasDataBase().removerReservasNumDia(LocalDateTime.now(), serverDatabase.getUtilizadoresDataBase());
                         break;
                     case "passwordChange":
-                        /** passwordChange;id;password; */
+                        /** passwordChange;id;passwordHash; */
                         String user_Type = stringTokenizer.nextToken();
                         String user_ID = stringTokenizer.nextToken();
-                        String newPassword = stringTokenizer.nextToken();
+                        int passwordHash = Integer.valueOf(stringTokenizer.nextToken());
                         if(user_Type.equals("admin")){
-                            if(serverDatabase.getUtilizadoresDataBase().administradorExiste(user_ID)){
-                                serverDatabase.getUtilizadoresDataBase().getAdministradorByID(user_ID).setPasswordHash(newPassword.hashCode());
-                            }
+                            Utilizador adminAux = serverDatabase.getUtilizadoresDataBase().getAdministradorByID(user_ID);
+                            if(adminAux != null) adminAux.setPasswordHash(passwordHash);
+                    
                         } else{
-                            if(serverDatabase.getUtilizadoresDataBase().utilizadorExiste(user_ID)){
-                                serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(user_ID).setPasswordHash(newPassword.hashCode());
-                            }
+                            Utilizador utilizadorAux = serverDatabase.getUtilizadoresDataBase().getUtilizadorByID(user_ID);
+                            if(utilizadorAux != null) utilizadorAux.setPasswordHash(passwordHash);
                         }
                         break;
                     case "save":

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Scanner;
-
 import Business.Utilizador;
 import Business.Voo;
 
@@ -86,7 +85,7 @@ public class TextUI implements Serializable{
                     showErrorMessage("As duas password não coincidem");
                 }
             } while (!password.equals(passwordCheck));
-            out.writeUTF(password);
+            out.writeInt(password.hashCode());
             Utilizador utilizadorAdicionado = Utilizador.deserialize(in);
             System.out.println("Adicionado com sucesso: " + utilizadorAdicionado.getId());
         } catch (IOException e) {
@@ -106,7 +105,7 @@ public class TextUI implements Serializable{
         System.out.println("Insira a sua password:");
         System.out.print("> ");
         String password = scin.nextLine();
-        String loginRequest = "login;admin;" + id + ";" + password + ";";
+        String loginRequest = "login;admin;" + id + ";" + password.hashCode() + ";";
         try {
             out.writeUTF(loginRequest);
             boolean loginAccepted = in.readBoolean();
@@ -130,7 +129,7 @@ public class TextUI implements Serializable{
         System.out.println("Insira a sua password:");
         System.out.print("> ");
         String password = scin.nextLine();
-        String loginRequest = "login;user;" + id + ";" + password + ";";
+        String loginRequest = "login;user;" + id + ";" + password.hashCode() + ";";
         try {
             out.writeUTF(loginRequest);
             boolean loginAccepted = in.readBoolean();
@@ -173,6 +172,7 @@ public class TextUI implements Serializable{
             "Alterar password",
             "Efetuar reserva",
             "Ver reservas efetuadas",
+            "Adicionar voos a reserva",
             "Cancelar reserva",
             "Ver voos disponíveis",
         });
@@ -180,8 +180,9 @@ public class TextUI implements Serializable{
         menu.setHandler(1, () -> alterarPassword(utilizador));
         menu.setHandler(2, () -> efetuarReserva(utilizador));
         menu.setHandler(3, () -> verReservas(utilizador));
-        menu.setHandler(4, () -> cancelarReserva(utilizador));
-        menu.setHandler(5, () -> verVoos());
+        menu.setHandler(4, () -> adicionarVooReserva());
+        menu.setHandler(5, () -> cancelarReserva(utilizador));
+        menu.setHandler(6, () -> verVoos());
         menu.run();
     }
 
@@ -217,6 +218,45 @@ public class TextUI implements Serializable{
             String bookingsList = in.readUTF();
             if(bookingsList.length() == 0) showErrorMessage("Sem reservas efetuadas");
             else System.out.println(bookingsList);
+        } catch (IOException e) {
+            showErrorMessage("Não foi possível efetuar ligação com o servidor");
+        }
+        
+    }
+
+    /**
+     * Adicionar um voo à reserva
+     */
+    public void adicionarVooReserva(){
+        System.out.println("Insira o identificador da reserva à qual pretende adicionar voo:");
+        System.out.print("> ");
+        String idReserva = scin.nextLine();
+        String addFlightToReservationRequest = "add;flightToReservation;" + idReserva + ";";
+        try {
+            out.writeUTF(addFlightToReservationRequest);
+            if(in.readBoolean() == false) {
+                showErrorMessage("Reserva Inexistente");
+                return;
+            }
+            String lastDestination = in.readUTF();
+            int size = in.readInt();
+            if(!lastDestination.equals("")) System.out.println("Voos disponíveis a partir de: " + lastDestination);
+            else System.out.println("Voos disponíveis: ");
+            if(size ==  0) showErrorMessage("Sem voos disponíveis");
+            else System.out.println("─────────────────────────────────────────");
+            for (int i = 0; i < size; i++) {
+                Voo voo = Voo.deserialize(in);
+                System.out.println(voo.toString());
+            }
+            System.out.println("Insira o identificador do voo que pretende adicionar:");
+            System.out.print("> ");
+            String idVoo = scin.nextLine();
+            out.writeUTF(idVoo);
+            if(in.readBoolean() == false) {
+                showErrorMessage("Não foi possível adicionar voo\n Voo inexistente ou voo com partida diferente do destino do último voo da reserva");
+                return;
+            }
+            System.out.println(" -- Voo adicionado --");
         } catch (IOException e) {
             showErrorMessage("Não foi possível efetuar ligação com o servidor");
         }
@@ -380,8 +420,8 @@ public class TextUI implements Serializable{
             }
         } while (!password.equals(passwordCheck));
         String changePasswordRequest;
-        if(utilizador.getIsAdmin() == true) changePasswordRequest = "passwordChange;admin;" + utilizador.getId() + ";" + password + ";";
-        else changePasswordRequest = "passwordChange;user;" + utilizador.getId() + ";" + password + ";";
+        if(utilizador.isAdmin() == true) changePasswordRequest = "passwordChange;admin;" + utilizador.getId() + ";" + password.hashCode() + ";";
+        else changePasswordRequest = "passwordChange;user;" + utilizador.getId() + ";" + password.hashCode() + ";";
         try {
             out.writeUTF(changePasswordRequest);
             System.out.println("Password alterada com sucesso");

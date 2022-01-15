@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import Database.ReservasDB;
+import Database.VoosDB;
 
 public class Utilizador implements Serializable{
     /** Identificador de utilizador */
@@ -101,7 +102,7 @@ public class Utilizador implements Serializable{
      * Saber se um utilizador é administrador do sistema
      * @return {@code true} caso seja administrador de sistema, {@code false} caso contrário 
      */
-    public boolean getIsAdmin() {
+    public boolean isAdmin() {
         return this.isAdmin;
     }
 
@@ -117,12 +118,12 @@ public class Utilizador implements Serializable{
      * Obter uma lista de todas as reservas
      * @return A string com todas as reservas
      */
-    public String getlistBookings(ReservasDB reservasDB) {
+    public String getlistBookings(ReservasDB reservasDB,VoosDB voosDB) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String,String> entry : this.reservas.entrySet()) {
             if(reservasDB.reservaExiste(entry.getValue())){
                 Reserva reserva = reservasDB.getReservaByID(entry.getValue());
-                sb.append(reserva.toString());
+                sb.append(reserva.getDetalhesReservaString(voosDB));
                 sb.append("\n");
             } else {
                 sb.append(" -- Reserva com ID: " + entry.getValue() + " Cancelada --\n");

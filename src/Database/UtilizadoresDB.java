@@ -2,7 +2,6 @@ package Database;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import Business.Utilizador;
@@ -35,14 +34,34 @@ public class UtilizadoresDB implements Serializable{
      * Adicionar um utilizador á base de dados
      * @param nome O nome do utilizador
      * @param password A password do utilizador
-     * @return O utilizador adicionado
+     * @return O utilizador adicionado, {@code null} caso exista um utilizador com o mesmo username
      */
     public Utilizador adicionarUtilizadorNormal(String username, String nome,String password){
         Utilizador utilizador = new Utilizador(username, nome, password.hashCode(),false);
         utilizador.toString();
         lock.lock();
         try{
-            this.utilizadores.put(utilizador.getId(), utilizador);
+            if(!this.utilizadores.containsKey(username)) this.utilizadores.put(utilizador.getId(), utilizador);
+            else utilizador = null;
+        }finally{
+            lock.unlock();
+        }
+        return utilizador;
+    }
+
+    /**
+     * Adicionar um utilizador á base de dados
+     * @param nome O nome do utilizador
+     * @param password A password do utilizador
+     * @return O utilizador adicionado, {@code null} caso exista um utilizador com o mesmo username
+     */
+    public Utilizador adicionarUtilizadorNormal(String username, String nome,int passwordHash){
+        Utilizador utilizador = new Utilizador(username, nome, passwordHash,false);
+        utilizador.toString();
+        lock.lock();
+        try{
+            if(!this.utilizadores.containsKey(username)) this.utilizadores.put(utilizador.getId(), utilizador);
+            else utilizador = null;
         }finally{
             lock.unlock();
         }
@@ -54,13 +73,33 @@ public class UtilizadoresDB implements Serializable{
      * @param username O username do utilizador
      * @param nome O nome do administrador
      * @param password A password do administrador
-     * @return O administrador adicionado
+     * @return O administrador adicionado, {@code null} caso exista um administrador com o mesmo username
      */
     public Utilizador adicionarAdministrador(String username, String nome,String password){
         Utilizador administrador = new Utilizador(username, nome, password.hashCode(),true);
         lock.lock();
         try{
-            this.administradores.put(administrador.getId(), administrador);
+            if(!this.administradores.containsKey(username)) this.administradores.put(administrador.getId(), administrador);
+            else administrador = null;
+        }finally{
+            lock.unlock();
+        }
+        return administrador;
+    }
+
+    /**
+     * Adicionar um administrador á base de dados
+     * @param username O username do utilizador
+     * @param nome O nome do administrador
+     * @param password A password do administrador
+     * @return O administrador adicionado, {@code null} caso exista um administrador com o mesmo username
+     */
+    public Utilizador adicionarAdministrador(String username, String nome,int passwordHash){
+        Utilizador administrador = new Utilizador(username, nome, passwordHash,true);
+        lock.lock();
+        try{
+            if(!this.administradores.containsKey(username)) this.administradores.put(administrador.getId(), administrador);
+            else administrador = null;
         }finally{
             lock.unlock();
         }
@@ -202,6 +241,7 @@ public class UtilizadoresDB implements Serializable{
 
     /**
      * Verifica se uma determinada password de um utilizador normal corresponde á hash guardada
+     * @param id O identificador do utilizador
      * @param password A password a verificar
      * @return {@code true} se a password for válida, {@code false} caso contrário
      */
@@ -220,7 +260,28 @@ public class UtilizadoresDB implements Serializable{
     }
 
     /**
+     * Verifica se uma determinada password de um utilizador normal corresponde á hash guardada
+     * @param id O identificador do utilizador
+     * @param passwordHash A hash da password a verificar
+     * @return {@code true} se a password for válida, {@code false} caso contrário
+     */
+    public boolean autenticaUtilizador(String id, int passwordHash){
+        boolean validPassword = false;
+        lock.lock();
+        try{
+            if(this.utilizadorExiste(id)){
+                Utilizador utilizador = this.utilizadores.get(id);
+                if(utilizador.getPasswordHash() == passwordHash) validPassword = true;
+            }
+        }finally{
+            lock.unlock();
+        }
+        return validPassword;
+    }    
+
+    /**
      * Verifica se uma determinada password  de um administrador corresponde á hash guardada
+     * @param id O idenntificador do administrador
      * @param password A password a verificar
      * @return {@code true} se a password for válida, {@code false} caso contrário
      */
@@ -231,6 +292,26 @@ public class UtilizadoresDB implements Serializable{
             if(this.administradorExiste(id)){
                 Utilizador administrador = this.administradores.get(id);
                 if(administrador.getPasswordHash() == password.hashCode()) validPassword = true;
+            }
+        }finally{
+            lock.unlock();
+        }
+        return validPassword;
+    }
+
+    /**
+     * Verifica se uma determinada password  de um administrador corresponde á hash guardada
+     * @param id O idenntificador do administrador
+     * @param passwordHash A hash da password a verificar
+     * @return {@code true} se a password for válida, {@code false} caso contrário
+     */
+    public boolean autenticaAdministrador(String id, int passwordHash){
+        boolean validPassword = false;
+        lock.lock();
+        try{
+            if(this.administradorExiste(id)){
+                Utilizador administrador = this.administradores.get(id);
+                if(administrador.getPasswordHash() == passwordHash) validPassword = true;
             }
         }finally{
             lock.unlock();

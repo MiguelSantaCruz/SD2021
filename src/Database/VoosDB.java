@@ -2,7 +2,9 @@ package Database;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -122,7 +124,6 @@ public class VoosDB implements Serializable{
     public void getAllVoos(DataOutputStream out) throws IOException{
         /* Escrever o tamanho do map */
         out.writeInt(this.voos.size());
-        System.out.println("[Voos DataBase] Existem: " + this.voos.size() + " voos");
         /* Enviar os voos um a um */
         lock.lock();
         try{
@@ -132,6 +133,27 @@ public class VoosDB implements Serializable{
         }finally{
             lock.unlock();
         }
+    }
+
+    /**
+     * Devolve todos os voos disponíveis com partida num determinado destino
+     * @param destination O destino do voo, null para obter todos os voos
+     * @return Uma lista com todos os voos com partida num determinado destino
+     */
+    public List<Voo> getAllVoosFromDestination(DataOutputStream out, String destination){
+        List<Voo> vooList = new ArrayList<>();
+        if(destination == null){
+            for (Map.Entry<String,Voo> entry : this.voos.entrySet()) {
+                vooList.add(entry.getValue());
+            }
+        }else{
+            for (Map.Entry<String,Voo> entry : this.voos.entrySet()) {
+                if(entry.getValue().getOrigem().equals(destination))
+                vooList.add(entry.getValue());
+            }
+        }
+        
+        return vooList;
     }
 
     /**
