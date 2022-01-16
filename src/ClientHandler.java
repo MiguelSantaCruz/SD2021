@@ -56,7 +56,7 @@ public class ClientHandler implements Runnable{
                 String function = stringTokenizer.nextToken();
                 switch (function) {
                     case "login":
-                        /** login;user/admin;id;password */
+                        /** login;user/admin;id;passwordHash */
                         /** Autenticar utilizador ou administrador */
                         String userType = stringTokenizer.nextToken();
                         String id = stringTokenizer.nextToken();
