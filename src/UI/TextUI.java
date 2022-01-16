@@ -38,10 +38,10 @@ public class TextUI implements Serializable{
      */
     private void menuPrincipal() {
         Menu menu = new Menu(new String[]{
-                "Registar Utilizador",
-                "Autenticar Utilizador",
-                "Autenticar Administrador",
-                "Ver voos"
+                "👥📑 Registar Utilizador ",
+                "👥🔐 Autenticar Utilizador ",
+                "👥🔧 Autenticar Administrador ",
+                "📃🛪 Ver voos"
         });
         menu.setTitulo("Reserva de voos ✈");
   
@@ -170,13 +170,13 @@ public class TextUI implements Serializable{
      */
     public void menuUtilizador(Utilizador utilizador){
         Menu menu = new Menu(new String[]{
-            "Alterar password",
-            "Efetuar reserva pelo código de voo",
-            "Efetuar reserva pelo percurso do voo",
-            "Ver reservas efetuadas",
-            "Adicionar voos a reserva",
-            "Cancelar reserva",
-            "Ver voos disponíveis",
+            "🔐 Alterar password",
+            "📃 Efetuar reserva pelo código de voo",
+            "📑 Efetuar reserva pelo percurso do voo",
+            "📖 Ver reservas efetuadas",
+            "📃🛪 Adicionar voos a reserva",
+            "📃❌ Cancelar reserva",
+            "🛪 Ver voos disponíveis",
         });
         menu.setTitulo( utilizador.getName() + " - Área autenticada");
         menu.setHandler(1, () -> alterarPassword(utilizador));
@@ -343,12 +343,12 @@ public class TextUI implements Serializable{
      */
     public void menuAdministrador(Utilizador administrador){
         Menu menu = new Menu(new String[]{
-            "Adicionar administrador",
-            "Adicionar Voo",
-            "Fechar Dia",
-            "Alterar password",
-            "Guardar estado",
-            "Ler estado",
+            "👥+ Adicionar administrador",
+            "🛪 + Adicionar Voo",
+            "❌ Fechar Dia",
+            "🔐 Alterar password",
+            "📥 Guardar estado",
+            "📤 Ler estado",
         });
         menu.setTitulo("[ADMIN] " + administrador.getName() + " - Área autenticada");
         menu.setHandler(1, () -> registarAdministrador());
@@ -393,7 +393,7 @@ public class TextUI implements Serializable{
                     showErrorMessage("As duas password não coincidem");
                 }
             } while (!password.equals(passwordCheck));
-            out.writeUTF(password);
+            out.writeInt(password.hashCode());
             Utilizador utilizadorAdicionado = Utilizador.deserialize(in);
             System.out.println("Adicionado com sucesso: " + utilizadorAdicionado.getId());
         } catch (IOException e) {
